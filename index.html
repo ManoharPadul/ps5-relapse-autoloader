@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ps5</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0c0c0f; }
+
+  /* The log is shown by default so the console screen is readable (you cannot
+     add a query flag when the User Guide redirects straight in). Pass ?log=0 to
+     hide it. */
+  #console { display: none; }
+  body.verbose #console {
+      display: block;
+      box-sizing: border-box;
+      min-height: 100vh;
+      padding: 10px 12px;
+      color: #dfe3ee;
+      font: 12px/1.45 ui-monospace, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-y: auto;
+  }
+  #console div { padding: 1px 0; }
+  .LOG-DEBUG { color: #6f7480; }
+  .LOG-INFO { color: #b9c2ff; }
+  .LOG-LOG { color: #dfe3ee; }
+  .LOG-WARN { color: #ffd27d; }
+  .LOG-ERROR { color: #ff6b6b; }
+  .LOG-SUCCESS { color: #7dff9e; }
+
+  /* Slopkit-style in-page payload screen. Keeping it in this document is
+     important: the exploit primitives and the console-side sender stay alive. */
+  body.payload-mode { background: #0c0c0f; color: #fff; }
+  body.payload-mode #console {
+      display: block;
+      box-sizing: border-box;
+      min-height: 100vh;
+      padding: 8px 0 0;
+      color: #fff;
+      font: 12px/1.35 ui-monospace, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      overflow-y: auto;
+  }
+  body.payload-mode #console > div:not(.relapse-payload-screen) { padding: 1px 12px; }
+  body.payload-only-mode #console > div:not(.relapse-payload-screen) { display: none; }
+  body.payload-only-mode #console { padding: 0; overflow: hidden; }
+  body.payload-only-mode .relapse-payload-screen {
+      min-height: 100vh;
+      margin-top: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+  }
+  .relapse-payload-screen {
+      margin-top: 10px;
+      background: #0c0c0f;
+      color: #fff;
+      font: 16px/1.35 Arial, sans-serif;
+      white-space: normal;
+      word-break: normal;
+  }
+  .relapse-payload-header {
+      box-sizing: border-box;
+      min-height: 112px;
+      padding: 8px;
+      text-align: center;
+  }
+  .relapse-payload-header h2 { margin: 6px 0; color: #fff; font-size: 30px; line-height: 1.2; }
+  .relapse-payload-header .eyebrow { color: #7dff9e; font-size: 16px; }
+  .relapse-payload-header p { margin: 0; color: #ccc; font-size: 15px; }
+  .relapse-payload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 36px;
+      width: 100%;
+      padding: 0 32px 32px;
+      box-sizing: border-box;
+      align-content: start;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+  }
+  .relapse-payload-tile {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      margin: 3px;
+      padding: 16px 24px;
+      box-sizing: border-box;
+      border: 0;
+      border-radius: 20px;
+      background: #202125;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      font: inherit;
+      line-height: 1.5;
+  }
+  .relapse-payload-tile:hover,
+  .relapse-payload-tile:focus { outline: 0; background: #a2a2a6; color: #202020; }
+  .relapse-payload-tile:focus { box-shadow: 0 0 0 3px #ebcb8b; }
+  .relapse-payload-tile.busy { opacity: .5; pointer-events: none; }
+  .relapse-payload-tile.sent { border: 2px solid #47c76a; }
+  .relapse-payload-tile.failed { border: 2px solid #e74856; }
+  .relapse-payload-title { display: block; margin: 0; color: #fff; font-size: 21px; font-weight: 800; }
+  .relapse-payload-description { display: block; margin: 0; color: #ccc; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .relapse-payload-info { display: block; margin: 0; color: #999; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .relapse-payload-tile:hover .relapse-payload-title,
+  .relapse-payload-tile:focus .relapse-payload-title { color: #202020; }
+  .relapse-payload-tile:hover .relapse-payload-description,
+  .relapse-payload-tile:focus .relapse-payload-description { color: #444; }
+  .relapse-payload-tile:hover .relapse-payload-info,
+  .relapse-payload-tile:focus .relapse-payload-info { color: #555; }
+  @media (max-width: 760px) {
+      .relapse-payload-grid { grid-template-columns: 1fr; padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="console"></div>
+
+<script src="rop.js"></script>
+<script src="payloads.js?v=3"></script>
+<script src="firmware.js?v=4"></script>
+<script src="main.js?v=6"></script>
+
+<script>
+// main.js appends the offsets script for the detected firmware as its last act.
+// Everything downstream needs those globals, so publish a promise for them.
+window.offsetsReady = new Promise(function (resolve, reject) {
+    var script = document.querySelector('script[src^="offsets/"]');
+    if (!script) return reject(new Error("main.js never injected an offsets script"));
+    if (typeof OFFSET_wk_vtable_first_element !== "undefined") return resolve(script.src);
+    script.addEventListener("load", function () { resolve(script.src); });
+    script.addEventListener("error", function () {
+        reject(new Error("offsets script failed to load: " + script.src));
+    });
+});
+</script>
+
+<script src="syscalls.js"></script>
+
+<script>
+// Optional overrides, all off by default:
+//   ?kexp=<file>     use a different kernel shellcode blob
+//   ?elfldr=<file>   use a different ELF loader payload
+//   ?log=0           hide the on-screen progress log (shown by default)
+(function () {
+    var query = new URLSearchParams(location.search);
+    window.AIO_CFG = {};
+    if (query.get("kexp")) AIO_CFG.kexp = query.get("kexp");
+    if (query.get("elfldr")) AIO_CFG.elfldr = query.get("elfldr");
+    if (query.get("force") === "1") AIO_CFG.force = true;
+    if (query.get("log") !== "0") document.body.classList.add("verbose");
+})();
+</script>
+
+<script type="module">
+// core.js's ?v= here and in mem.js MUST be identical. In ES modules the URL is
+// the module identity, so a mismatch loads two separate core.js instances: this
+// file would establish the primitive on one while mem.js promotes the other.
+import { establishPrimitive, fakeCellReleased, CORE_INSTANCE } from "./core.js?v=132";
+import { installWindowP, pairStatus, memCoreInstance } from "./mem.js?v=131";
+
+if (CORE_INSTANCE !== memCoreInstance)
+    throw new Error("core.js module skew: index.html and mem.js imported different ?v= URLs");
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+var __bseq=0;
+function __bcn(m){
+    if (!window.__telemetryEnabled) return;
+    try{new Image().src="log/LT-s"+(++__bseq)+"-"+encodeURIComponent(String(m)).slice(0,400)+"?t="+Date.now();}catch(e){}
+}
+var __logQueue=[];
+var __logFlushScheduled=false;
+function __flushLogs(){
+    __logFlushScheduled=false;
+    var view=document.getElementById("console");
+    if (!view || !__logQueue.length) return;
+    var frag=document.createDocumentFragment();
+    while (__logQueue.length) {
+        var item=__logQueue.shift();
+        var line=document.createElement("div");
+        line.className=item.level || "LOG-LOG";
+        line.textContent=item.message;
+        frag.appendChild(line);
+    }
+    view.appendChild(frag);
+    var screen=document.getElementById("relapse-payload-screen");
+    while (view.children.length - (screen ? 1 : 0) > 600) {
+        var first=view.firstElementChild;
+        if (!first || first === screen) break;
+        first.remove();
+    }
+    if (document.body.classList.contains("verbose")) view.scrollTop=view.scrollHeight;
+}
+function print(message, level) {
+    __bcn(message);
+    __logQueue.push({message:String(message), level:level || "LOG-LOG"});
+    if (!__logFlushScheduled) {
+        __logFlushScheduled=true;
+        requestAnimationFrame(__flushLogs);
+    }
+}
+
+function reportFailure(error) {
+    const message = String((error && error.message) || error)
+        + ((error && error.stack) ? " @" + error.stack : "");
+    print("FAILED: " + message, "LOG-ERROR");
+    try { window.__rep("PAGE-FAIL", message.slice(0, 400)); } catch (e) { /* best effort */ }
+}
+
+async function ensureOfflineCache() {
+    if (!("serviceWorker" in navigator) || !("MessageChannel" in window)) {
+        throw new Error("offline cache requires service workers and MessageChannel");
+    }
+
+    print("preparing offline cache before jailbreak...", "LOG-INFO");
+    let registration = await navigator.serviceWorker.register("./sw.js?v=14", { scope: "./" });
+    try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
+
+    let worker = null;
+    for (let attempt = 0; attempt < 40; attempt++) {
+        registration = await navigator.serviceWorker.ready;
+        worker = registration.active;
+        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=14") !== -1) break;
+        await sleep(250);
+    }
+    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=14") === -1) {
+        throw new Error("offline cache worker did not activate");
+    }
+
+    return new Promise((resolve, reject) => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = (event) => {
+            const data = event.data || {};
+            if (data.type === "offline-progress") {
+                print("offline cache " + data.done + "/" + data.total + " " + data.asset, "LOG-DEBUG");
+            } else if (data.type === "offline-ready") {
+                print("offline cache ready - starting jailbreak", "LOG-SUCCESS");
+                resolve();
+            } else if (data.type === "offline-error") {
+                reject(new Error("offline cache failed: " + data.error));
+            }
+        };
+        channel.port1.start();
+        worker.postMessage({ type: "prepare-offline" }, [channel.port2]);
+    });
+}
+
+// main.js logs progress through window.jb when it is present.
+window.jb = { mark: (tag, detail) => print(detail ? tag + " " + detail : tag, "LOG-INFO") };
+
+// main.js carries a payload-sending UI this page does not use, but its entry
+// point is called on the path we take, so it has to exist.
+window.populatePayloadsPage = () => {};
+
+window.addEventListener("error", (e) => print("error: " + (e && e.message), "LOG-ERROR"));
+window.addEventListener("unhandledrejection", (e) =>
+    print("rejected: " + String((e && e.reason && e.reason.message) || (e && e.reason)), "LOG-ERROR"));
+
+/** Run the WebKit bug until it yields a working userland read/write primitive. */
+async function establishUserlandPrimitive() {
+    if (globalThis.p && typeof globalThis.p.read8 === "function") {
+        print("reusing the existing primitive", "LOG-INFO");
+        return globalThis.p;
+    }
+
+    print("running the WebKit bug (placement retries itself)", "LOG-INFO");
+    try { history.replaceState(null, ""); } catch (e) { /* not fatal */ }
+    if (typeof globalThis.gc === "function") { try { globalThis.gc(); } catch (e) { /* ditto */ } }
+    await sleep(750);
+
+    const carrier = await establishPrimitive({
+        maxAttempts: 8,
+        onEvent(tag, detail, attempt) {
+            print((typeof attempt === "number" ? "[" + attempt + "] " : "") + tag
+                + (detail ? " " + detail : ""), "LOG-DEBUG");
+        },
+        beforeCriticalLoad() {
+            try { document.getElementById("console").offsetWidth; } catch (e) { /* layout poke */ }
+        },
+    });
+
+    installWindowP(carrier, {
+        onEvent(tag, detail) {
+            print(tag + " " + detail, "LOG-DEBUG");
+            try { window.__rep(tag, String(detail ?? "").slice(0, 400)); } catch (e) { /* ditto */ }
+        },
+    });
+    if (!pairStatus.promoted)
+        throw new Error("the primitive pair was not promoted: " + pairStatus.error);
+
+    if (typeof globalThis.gc === "function") { try { globalThis.gc(); } catch (e) { /* ditto */ } }
+    await sleep(1000);
+
+    const p = globalThis.p;
+    if (!p || typeof p.read8 !== "function") throw new Error("window.p was never published");
+    print("primitive up (fakeCellReleased=" + fakeCellReleased() + ")", "LOG-INFO");
+    return p;
+}
+
+async function run() {
+    const rejection = window.firmware.rejection();
+    if (rejection) throw new Error(rejection);
+
+    await ensureOfflineCache();
+    await offsetsReady;
+    print("firmware " + window.fw_str, "LOG-INFO");
+
+    const p = await establishUserlandPrimitive();
+
+    // Imported here rather than at the top of the file on purpose: a module's
+    // source text is on the heap before the groom runs, and the placement the
+    // WebKit bug depends on is sensitive to what is sitting there.
+    await import("./exploit.js");
+
+    // main() prepares the ROP worker and then drives the kernel chain.
+    await main(p);
+
+    // Draw the payload menu HERE rather than handing off to elf.html.
+    //
+    // This document still owns the exploit primitives, so main.js could expose
+    // window.__sendPayload, which has the CONSOLE open 127.0.0.1:9021 through its own
+    // syscalls. No server does anything, so the menu works from any static host -
+    // GitHub Pages included. elf.html cannot do that: it deliberately carries no
+    // exploit code, so it has to ask the host to open the socket, which needs a server
+    // that runs code AND can route back to the console.
+    //
+    // Navigating away would destroy the primitives with the document, so we stay put.
+    if (!window.__elfldrUp || typeof window.__sendPayload !== "function") return;
+    buildPayloadMenu();
+}
+
+/** Tiles are PNGs: this browser lays text tiles out correctly and paints no glyphs. */
+function buildPayloadMenu() {
+    if (document.getElementById("relapse-payload-screen")) return;
+    const tiles = (window.PAYLOAD_TILES || []).slice();
+    const fallbackTiles = [
+        { title: "PLK Manager v0.5.2 (13.60)", description: "Rebuilt with latest SDK. Open PS5-IP:8084.", name: "pldmgr_v0.5.2.elf", key: "pldmgr-v052", art: false },
+        { title: "nanodns", description: "nanodns payload.", name: "nanodns.elf", key: "nanodns", art: false },
+        { title: "shadowmountplus", description: "shadowmountplus payload.", name: "shadowmountplus.elf", key: "shadowmountplus", art: false },
+        { title: "game-compressor", description: "Game compressor payload.", name: "game-compressor.elf", key: "game-compressor", art: false },
+        { title: "elf-arsenal", description: "ELF Arsenal payload.", name: "elf-arsenal.elf", key: "elf-arsenal", art: false },
+        { title: "gdbsrv", description: "GDB server. Runs on port 2159.", name: "gdbsrv-ps5.elf", key: "gdb", art: false },
+        { title: "shsrv", description: "Telnet shell server. Runs on port 2323.", name: "shsrv-ps5.elf", key: "shsrv", art: false }
+    ];
+    for (const fallback of fallbackTiles) {
+        if (!tiles.some((tile) => tile.name === fallback.name)) tiles.push(fallback);
+    }
+    if (!tiles.length) return print("no payload list (payloads.js missing)", "LOG-ERROR");
+
+    document.body.classList.add("payload-mode", "payload-only-mode");
+    const screen = document.createElement("section");
+    screen.id = "relapse-payload-screen";
+    screen.className = "relapse-payload-screen";
+    const header = document.createElement("div");
+    header.className = "relapse-payload-header";
+    header.innerHTML = '<h2>PS5 Relapse Payloads</h2>'
+        + '<div class="eyebrow" id="relapse-payload-status">ELF loader ready on console port 9021</div>'
+        + '<p>Select a payload to send it to the ELF loader.</p>';
+    const wrap = document.createElement("div");
+    wrap.className = "relapse-payload-grid";
+    screen.appendChild(header);
+    screen.appendChild(wrap);
+
+    for (const t of tiles) {
+        const a = document.createElement("button");
+        a.type = "button";
+        a.className = "relapse-payload-tile";
+        const title = document.createElement("span");
+        title.className = "relapse-payload-title";
+        title.textContent = t.title;
+        const description = document.createElement("span");
+        description.className = "relapse-payload-description";
+        description.textContent = t.description;
+        const info = document.createElement("span");
+        info.className = "relapse-payload-info";
+        info.textContent = t.name + " · port 9021";
+        a.appendChild(title);
+        a.appendChild(description);
+        a.appendChild(info);
+        a.addEventListener("click", async (e) => {
+            e.preventDefault();
+            a.classList.remove("sent", "failed");
+            a.classList.add("busy");
+            info.textContent = "Sending ELF to port 9021...";
+            document.getElementById("relapse-payload-status").textContent = "Sending " + t.title + "...";
+            print(t.title + ": sending ...", "LOG-INFO");
+            try {
+                const n = await window.__sendPayload(t.name);
+                a.classList.remove("busy");
+                a.classList.add("sent");
+                info.textContent = "Sent " + n + " bytes · port 9021";
+                document.getElementById("relapse-payload-status").textContent =
+                    t.key.indexOf("pldmgr") === 0 || t.key === "plk"
+                        ? "PLK Manager sent · open PS5-IP:8084" : t.title + " sent to port 9021";
+                print(t.title + ": sent " + n + " bytes to 127.0.0.1:9021", "LOG-SUCCESS");
+            } catch (err) {
+                a.classList.remove("busy");
+                a.classList.add("failed");
+                const message = String((err && err.message) || err);
+                info.textContent = "Failed: " + message;
+                document.getElementById("relapse-payload-status").textContent = t.title + " failed";
+                print(t.title + ": " + message, "LOG-ERROR");
+            }
+        });
+        wrap.appendChild(a);
+    }
+    document.getElementById("console").appendChild(screen);
+    try { wrap.firstChild.focus(); } catch (e) { /* not fatal */ }
+    print("elfldr is up - pick a payload", "LOG-SUCCESS");
+}
+
+run().catch(reportFailure);
+</script>
+
+</body>
+</html>
