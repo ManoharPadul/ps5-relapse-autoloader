@@ -52,8 +52,10 @@ opens instead.
 ## Payloads
 
 The menu includes the bundled Relapse-compatible payloads, including pldmgr,
-nanodns, shadowmountplus, game-compressor, elf-arsenal, kstuff, gdbsrv, and shsrv.
-The pldmgr entry is v0.5.2; the obsolete v0.5.1 binary is not included.
+nanodns, shadowmountplus, Game Compressor 1.0.4, elf-arsenal, kstuff, gdbsrv,
+and shsrv. Game Compressor is cached locally with the rest of the payloads and
+opens its PS5-side UI on port 5910 after it is sent. The pldmgr entry is v0.5.2;
+the obsolete v0.5.1 binary is not included.
 
 ## Firmware coverage
 
