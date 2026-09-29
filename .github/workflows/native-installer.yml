@@ -25,6 +25,13 @@ jobs:
           git clone --depth 1 --branch "${UPSTREAM_REF}" \
             https://github.com/itsPLK/ps5-webkit-autoloader.git .native-upstream
           git -C .native-upstream submodule update --init --recursive
+          # v0.4.0's bundled Slopkit patch was generated from this commit;
+          # the tag currently points its submodule at a newer incompatible
+          # revision.
+          git -C .native-upstream/third_party/slopkit fetch --depth 1 origin \
+            1c8df66a28b5a151c152cdf4aa320380e7d0b274
+          git -C .native-upstream/third_party/slopkit checkout --detach \
+            1c8df66a28b5a151c152cdf4aa320380e7d0b274
 
       - name: Overlay the 13.60 Relapse frontend and payloads
         shell: bash
