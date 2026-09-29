@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./assets/icon.svg" width="128" alt="PS5 Relapse icon" />
+  <img src="./assets/icon.png" width="128" alt="PS5 Relapse icon" />
 </p>
 
 <h1 align="center">PS5 Relapse Autoloader</h1>
