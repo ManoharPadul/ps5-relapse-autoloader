@@ -15,6 +15,9 @@ named `ps5-relapse-autoloader-installer.elf`; it is not the pldmgr payload. Send
 that installer ELF once through the already-running elfldr, let it finish the
 one-time cache/install flow, then launch the installed homescreen app.
 
+The homescreen icon is generated from `assets/relapse-icon.png`, derived from
+the supplied portrait, and embedded into `assets/icon.svg` during the build.
+
 This is intentionally separate from the browser-hosted cache-first page. The
 native installer must be tested on the target 13.60 console before it is treated
 as a release. A successful compiler build proves the ELF is linked; it does not
