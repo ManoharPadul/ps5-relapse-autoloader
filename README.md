@@ -49,6 +49,29 @@ When enabled, Relapse waits five seconds after elfldr is ready, sends the offici
 opens `http://<console-ip>:8084/`. When disabled, the normal in-page payload menu
 opens instead.
 
+## Network and CheatRunner use
+
+The first cache preparation needs an internet connection. After the page reports
+that the offline cache is ready, the internet can be disabled, but keep the PS5
+connected to the same local Wi-Fi/LAN as the device used to open its services. A
+local network interface is important for the 13.60 chain; disabling Wi-Fi entirely
+can produce `kaslr: no configured interface` or routing failures.
+
+CheatRunner v0.17 is bundled as a PS5 SDK ELF build. It is a post-jailbreak cheat
+dashboard, not a jailbreak:
+
+1. Open Relapse once online and let the offline cache finish.
+2. Later, open the cached page, run the jailbreak, and wait for elfldr on
+   `127.0.0.1:9021`.
+3. Select `CheatRunner v0.17`. The menu sends it to port 9021 and attempts to open
+   `http://<PS5-IP>:9999/`.
+4. Local cheat files can be used offline. Remote cheat sources/downloads still
+   need internet access.
+
+`127.0.0.1` means the PS5 itself. From another device, use the PS5's LAN IP.
+The ELF was compiled from CheatRunner v0.17 with the PS5 SDK; target-console
+testing is still required before treating it as firmware-verified.
+
 ## Payloads
 
 The menu includes the bundled Relapse-compatible payloads, including pldmgr,
