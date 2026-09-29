@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Embed the project PNG into the upstream icon SVG before rsvg-convert runs."""
+"""Create the native installer icon SVG from the project's PNG asset."""
 
 from __future__ import annotations
 
@@ -16,15 +16,14 @@ def main() -> int:
     upstream = Path(sys.argv[1]).resolve()
     svg_path = upstream / "assets" / "icon.svg"
     png_path = upstream / "assets" / "relapse-icon.png"
-    svg = svg_path.read_text(encoding="utf-8")
     png = base64.b64encode(png_path.read_bytes()).decode("ascii")
-    marker = 'href="relapse-icon.png"'
-    if marker not in svg:
-        raise SystemExit("icon.svg is missing the relapse-icon.png href")
-    svg_path.write_text(
-        svg.replace(marker, f'href="data:image/png;base64,{png}"'),
-        encoding="utf-8",
-    )
+    svg = f'''<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs></defs>
+  <image href="data:image/png;base64,{png}" x="0" y="0" width="1024" height="1024" preserveAspectRatio="xMidYMid slice" />
+</svg>
+'''
+    svg_path.write_text(svg, encoding="utf-8")
     print(f"Embedded {png_path.name} into {svg_path}")
     return 0
 
