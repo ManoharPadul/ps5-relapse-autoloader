@@ -165,17 +165,15 @@
       word-break: normal;
   }
   .relapse-payload-header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
+      display: block;
       gap: 24px;
       box-sizing: border-box;
       min-height: 104px;
       padding: 4px 2px 18px;
       border-bottom: 1px solid rgba(255,255,255,.12);
-      text-align: left;
+      text-align: center;
   }
-  .relapse-payload-brand { min-width: 0; }
+  .relapse-payload-brand { min-width: 0; text-align: center; }
   .relapse-payload-kicker {
       margin-bottom: 6px;
       color: var(--relapse-green);
@@ -192,12 +190,14 @@
       line-height: 1.1;
   }
   .relapse-payload-header p { margin: 8px 0 0; color: #949494; font-size: 13px; }
+  .relapse-payload-byline { margin-top: 6px; color: #bdbdbd; font-size: 12px; letter-spacing: .04em; }
   .relapse-loader-badge {
       display: flex;
       align-items: center;
       flex: 0 0 auto;
       gap: 8px;
-      margin-bottom: 2px;
+      width: fit-content;
+      margin: 14px auto 0;
       padding: 8px 11px;
       border: 1px solid rgba(141,240,173,.25);
       border-radius: 999px;
@@ -633,6 +633,7 @@ function buildPayloadMenu() {
     header.innerHTML = '<div class="relapse-payload-brand">'
         + '<div class="relapse-payload-kicker">PS5 RELAPSE / PAYLOAD CENTER</div>'
         + '<h2>Payloads</h2>'
+        + '<div class="relapse-payload-byline">By Manohar Padul</div>'
         + '<p>Select a payload to send it to the local ELF loader.</p>'
         + '</div>'
         + '<div class="relapse-loader-badge">'
