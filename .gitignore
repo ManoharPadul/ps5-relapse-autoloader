@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.native-upstream/
+ps5-relapse-autoloader-installer.elf
+ps5-relapse-autoloader-installer.elf.sha256
