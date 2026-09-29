@@ -160,6 +160,10 @@
       padding: 18px 30px 28px;
       background: radial-gradient(circle at 50% -20%, #151515 0, var(--relapse-black) 52%);
       color: #fff;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
       font: 16px/1.35 Arial, sans-serif;
       white-space: normal;
       word-break: normal;
@@ -247,6 +251,8 @@
       outline: 0;
       -webkit-appearance: none;
       appearance: none;
+      opacity: 1;
+      visibility: visible;
       transition: background .16s ease, border-color .16s ease, transform .16s ease;
   }
   .relapse-payload-tile:hover,
@@ -254,6 +260,7 @@
       background: #242424;
       border-color: var(--relapse-green);
       color: #f4f4f4 !important;
+      -webkit-text-fill-color: #f4f4f4;
   }
   .relapse-payload-tile:focus { box-shadow: 0 0 0 3px rgba(141,240,173,.24); }
   .relapse-payload-tile:active { transform: scale(.99); }
@@ -285,6 +292,7 @@
       display: block;
       margin: 5px 0 0;
       color: #c8c8c8 !important;
+      -webkit-text-fill-color: #c8c8c8;
       font-family: Arial, sans-serif;
       font-size: 14px;
       line-height: 1.25;
@@ -293,6 +301,7 @@
       display: block;
       margin: 7px 0 0;
       color: #8e8e8e !important;
+      -webkit-text-fill-color: #8e8e8e;
       font-family: Arial, sans-serif;
       font-size: 12px;
       line-height: 1.2;
@@ -727,6 +736,16 @@ function buildPayloadMenu() {
         wrap.appendChild(a);
     }
     document.getElementById("console").appendChild(screen);
+    // PS5 WebKit can defer painting dynamically-added text until a hover
+    // invalidates the card. Force one layout/paint while keeping the screen
+    // composited so the labels are visible on first render.
+    void screen.offsetHeight;
+    screen.style.visibility = "hidden";
+    void screen.offsetHeight;
+    screen.style.visibility = "visible";
+    screen.style.webkitTransform = "translateZ(0)";
+    screen.style.transform = "translateZ(0)";
+    void screen.offsetHeight;
     try { wrap.firstChild.focus(); } catch (e) { /* not fatal */ }
     print("elfldr is up - pick a payload", "LOG-SUCCESS");
 }
