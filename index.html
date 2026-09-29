@@ -168,6 +168,21 @@
       white-space: normal;
       word-break: normal;
   }
+  /* Build the complete view before revealing it. This mirrors Slopkit's
+     app-view/selected flow and avoids PS5 WebKit painting text only after a
+     hover or a second navigation. */
+  .relapse-payload-screen.relapse-payload-hidden {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+  }
+  .relapse-payload-screen.relapse-payload-visible {
+      display: grid !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+  }
   .relapse-payload-header {
       display: block;
       gap: 24px;
@@ -280,16 +295,21 @@
   .relapse-payload-tile.sent { border: 2px solid #47c76a; }
   .relapse-payload-tile.failed { border: 2px solid #e74856; }
   .relapse-payload-title {
-      display: block;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
       margin: 0;
       color: #f4f4f4 !important;
+      -webkit-text-fill-color: #f4f4f4;
       font-family: Arial, sans-serif;
       font-size: 21px;
       font-weight: 700;
       line-height: 1.2;
   }
   .relapse-payload-description {
-      display: block;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
       margin: 5px 0 0;
       color: #c8c8c8 !important;
       -webkit-text-fill-color: #c8c8c8;
@@ -298,7 +318,9 @@
       line-height: 1.25;
   }
   .relapse-payload-info {
-      display: block;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
       margin: 7px 0 0;
       color: #8e8e8e !important;
       -webkit-text-fill-color: #8e8e8e;
@@ -652,10 +674,9 @@ function buildPayloadMenu() {
     }
     if (!tiles.length) return print("no payload list (payloads.js missing)", "LOG-ERROR");
 
-    document.body.classList.add("payload-mode", "payload-only-mode");
     const screen = document.createElement("section");
     screen.id = "relapse-payload-screen";
-    screen.className = "relapse-payload-screen";
+    screen.className = "relapse-payload-screen relapse-payload-hidden";
     const header = document.createElement("div");
     header.className = "relapse-payload-header";
     header.innerHTML = '<div class="relapse-payload-brand">'
@@ -736,16 +757,28 @@ function buildPayloadMenu() {
         wrap.appendChild(a);
     }
     document.getElementById("console").appendChild(screen);
-    // PS5 WebKit can defer painting dynamically-added text until a hover
-    // invalidates the card. Force one layout/paint while keeping the screen
-    // composited so the labels are visible on first render.
+    // Match Slopkit: the complete view is already in the DOM before it is
+    // selected. Force layout while hidden, then reveal it in one transaction.
     void screen.offsetHeight;
-    screen.style.visibility = "hidden";
-    void screen.offsetHeight;
-    screen.style.visibility = "visible";
+    void wrap.offsetHeight;
+    document.body.classList.add("payload-mode", "payload-only-mode");
+    void document.getElementById("console").offsetHeight;
+    screen.classList.remove("relapse-payload-hidden");
+    screen.classList.add("relapse-payload-visible");
     screen.style.webkitTransform = "translateZ(0)";
     screen.style.transform = "translateZ(0)";
     void screen.offsetHeight;
+    setTimeout(() => {
+        void screen.offsetHeight;
+        const first = wrap.firstElementChild;
+        const firstTitle = first && first.querySelector(".relapse-payload-title");
+        if (firstTitle) {
+            const style = getComputedStyle(firstTitle);
+            print("payload view visible: title display=" + style.display
+                + " visibility=" + style.visibility
+                + " color=" + style.color, "LOG-DEBUG");
+        }
+    }, 0);
     // Do not focus the first tile: EtaHEN is first in the list and would look
     // permanently selected whenever the menu is opened.
     print("elfldr is up - pick a payload", "LOG-SUCCESS");
