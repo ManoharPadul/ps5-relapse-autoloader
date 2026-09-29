@@ -1,0 +1,68 @@
+name: Build native 13.60 installer ELF
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-native-installer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      UPSTREAM_REF: v0.4.0
+    steps:
+      - name: Check out Relapse
+        uses: actions/checkout@v4
+
+      - name: Fetch upstream native installer sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "${UPSTREAM_REF}" \
+            https://github.com/itsPLK/ps5-webkit-autoloader.git .native-upstream
+          git -C .native-upstream submodule update --init --recursive
+
+      - name: Overlay the 13.60 Relapse frontend and payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Keep the upstream slopkit/umtx2 trees because the upstream registry
+          # generator adds their AppCache entries. Relapse's index.html and
+          # relative assets replace the upstream app entry and remain the only
+          # exploit UI launched by this build.
+          rsync -a \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.native-upstream/' \
+            --exclude 'native/' \
+            --exclude 'README.md' \
+            --exclude '*.sha256' \
+            ./ .native-upstream/frontend/autoloader/
+
+      - name: Build the official PS5 SDK container
+        run: docker build -t ps5-relapse-autoloader-sdk \
+          -f .native-upstream/Dockerfile.sdk .native-upstream
+
+      - name: Compile the native installer ELF
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -u "$(id -u):$(id -g)" \
+            -v "$PWD/.native-upstream:/src" \
+            -w /src \
+            ps5-relapse-autoloader-sdk make clean all
+          cp .native-upstream/installer.elf ps5-relapse-autoloader-installer.elf
+          sha256sum ps5-relapse-autoloader-installer.elf > ps5-relapse-autoloader-installer.elf.sha256
+
+      - name: Upload native installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps5-relapse-autoloader-installer-13.60
+          path: |
+            ps5-relapse-autoloader-installer.elf
+            ps5-relapse-autoloader-installer.elf.sha256

@@ -885,6 +885,10 @@ async function main(userlandRW, wkOnly = false) {
   if (typeof ip === "undefined" || !ip.ip) {
     ip = { ip: "", name: "Offline" };
   }
+  // The page-level autoloader uses the console address after it sends pldmgr.
+  // Keep this value informational only; payload delivery still goes through
+  // the native ELF-loader socket opened by the exploit chain.
+  window.__ps5Ip = ip.ip || "";
 
   async function probe_sb_elfldr() {
     let fd =

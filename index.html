@@ -8,6 +8,21 @@
 <style>
   html, body { margin: 0; padding: 0; background: #0c0c0f; }
 
+  #relapse-boot-options {
+      box-sizing: border-box;
+      margin: 10px auto;
+      max-width: 900px;
+      padding: 12px 16px;
+      border: 1px solid #3d414b;
+      border-radius: 12px;
+      background: #17191f;
+      color: #dfe3ee;
+      font: 14px/1.4 Arial, sans-serif;
+  }
+  #relapse-boot-options label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  #relapse-boot-options input { width: 18px; height: 18px; accent-color: #55d879; }
+  #relapse-boot-status { margin-top: 6px; color: #9da5b6; font-size: 12px; }
+
   /* The log is shown by default so the console screen is readable (you cannot
      add a query flag when the User Guide redirects straight in). Pass ?log=0 to
      hide it. */
@@ -48,6 +63,7 @@
   body.payload-mode #console > div:not(.relapse-payload-screen) { padding: 1px 12px; }
   body.payload-only-mode #console > div:not(.relapse-payload-screen) { display: none; }
   body.payload-only-mode #console { padding: 0; overflow: hidden; }
+  body.payload-only-mode #relapse-boot-options { display: none; }
   body.payload-only-mode .relapse-payload-screen {
       min-height: 100vh;
       margin-top: 0;
@@ -123,6 +139,13 @@
 <body>
 
 <div id="console"></div>
+<section id="relapse-boot-options" aria-label="Relapse boot options">
+  <label>
+    <input id="autoload-pldmgr" type="checkbox">
+    <span>Autoload pldmgr v0.5.2 after jailbreak (wait 5 seconds, then open port 8084)</span>
+  </label>
+  <div id="relapse-boot-status">Offline cache will be prepared before jailbreak.</div>
+</section>
 
 <script src="rop.js"></script>
 <script src="payloads.js?v=3"></script>
@@ -216,12 +239,71 @@ function reportFailure(error) {
     try { window.__rep("PAGE-FAIL", message.slice(0, 400)); } catch (e) { /* best effort */ }
 }
 
+const AUTOLOAD_PLDMGR_KEY = "relapse.autoloadPldmgr";
+const autoloadPldmgrToggle = document.getElementById("autoload-pldmgr");
+const bootStatus = document.getElementById("relapse-boot-status");
+
+function setBootStatus(message, level) {
+    if (bootStatus) bootStatus.textContent = message;
+    if (level) print(message, level);
+}
+
+function loadAutoloadPldmgrSetting() {
+    try { return localStorage.getItem(AUTOLOAD_PLDMGR_KEY) === "1"; }
+    catch (e) { return false; }
+}
+
+function saveAutoloadPldmgrSetting(enabled) {
+    try { localStorage.setItem(AUTOLOAD_PLDMGR_KEY, enabled ? "1" : "0"); }
+    catch (e) { /* private browsing may disable storage */ }
+}
+
+if (autoloadPldmgrToggle) {
+    autoloadPldmgrToggle.checked = loadAutoloadPldmgrSetting();
+    autoloadPldmgrToggle.addEventListener("change", () => {
+        saveAutoloadPldmgrSetting(autoloadPldmgrToggle.checked);
+        setBootStatus(autoloadPldmgrToggle.checked
+            ? "pldmgr autoload enabled for the next successful jailbreak."
+            : "pldmgr autoload disabled; the normal payload menu will open.");
+    });
+}
+
+async function autoloadPldmgrIfEnabled() {
+    if (!autoloadPldmgrToggle || !autoloadPldmgrToggle.checked) return false;
+    if (typeof window.__sendPayload !== "function") return false;
+
+    autoloadPldmgrToggle.disabled = true;
+    for (let seconds = 5; seconds > 0; seconds--) {
+        setBootStatus("pldmgr autoload enabled - sending in " + seconds + " second" + (seconds === 1 ? "" : "s") + "...", "LOG-INFO");
+        await sleep(1000);
+    }
+
+    try {
+        setBootStatus("Loading pldmgr_v0.5.2.elf to port 9021...", "LOG-INFO");
+        const sent = await window.__sendPayload("pldmgr_v0.5.2.elf");
+        setBootStatus("pldmgr v0.5.2 sent (" + sent + " bytes); opening port 8084...", "LOG-SUCCESS");
+        // Give pldmgr a moment to bind its HTTP socket before navigating away.
+        await sleep(500);
+        const ip = String(window.__ps5Ip || "");
+        if (/^[0-9.]+$/.test(ip)) {
+            location.href = "http://" + ip + ":8084/";
+            return true;
+        }
+        setBootStatus("pldmgr sent, but the PS5 network address was unavailable; opening the normal menu.", "LOG-WARN");
+    } catch (error) {
+        setBootStatus("pldmgr autoload failed; opening the normal menu.", "LOG-ERROR");
+        print("pldmgr autoload: " + String((error && error.message) || error), "LOG-ERROR");
+    }
+    autoloadPldmgrToggle.disabled = false;
+    return false;
+}
+
 async function ensureOfflineCache() {
     if (!("serviceWorker" in navigator) || !("MessageChannel" in window)) {
         throw new Error("offline cache requires service workers and MessageChannel");
     }
 
-    print("preparing offline cache before jailbreak...", "LOG-INFO");
+    setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");
     let registration = await navigator.serviceWorker.register("./sw.js?v=14", { scope: "./" });
     try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
 
@@ -241,9 +323,10 @@ async function ensureOfflineCache() {
         channel.port1.onmessage = (event) => {
             const data = event.data || {};
             if (data.type === "offline-progress") {
+                setBootStatus("Caching offline bundle " + data.done + "/" + data.total + "...", "LOG-DEBUG");
                 print("offline cache " + data.done + "/" + data.total + " " + data.asset, "LOG-DEBUG");
             } else if (data.type === "offline-ready") {
-                print("offline cache ready - starting jailbreak", "LOG-SUCCESS");
+                setBootStatus("Offline cache ready - starting jailbreak.", "LOG-SUCCESS");
                 resolve();
             } else if (data.type === "offline-error") {
                 reject(new Error("offline cache failed: " + data.error));
@@ -335,6 +418,7 @@ async function run() {
     //
     // Navigating away would destroy the primitives with the document, so we stay put.
     if (!window.__elfldrUp || typeof window.__sendPayload !== "function") return;
+    if (await autoloadPldmgrIfEnabled()) return;
     buildPayloadMenu();
 }
 

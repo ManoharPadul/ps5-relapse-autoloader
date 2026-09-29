@@ -30,4 +30,22 @@ exploit is not started and the next online visit resumes the preparation.
 
 Clearing PS5 browser data removes the cache and requires one more online visit.
 
+## pldmgr autoload toggle
+
+The boot options card has a persistent `Autoload pldmgr v0.5.2` toggle. When it
+is enabled, Relapse waits five seconds after elfldr is ready, sends the official
+13.60-compatible `payloads/pldmgr_v0.5.2.elf`, waits for it to bind, and opens
+the PS5's `http://<console-ip>:8084/` interface. When it is disabled, the normal
+in-page payload menu opens instead.
+
+## Native installer build
+
+The separate native installer phase is in `native/` and `.github/workflows/`.
+GitHub Actions downloads the official autoloader build sources and PS5 SDK
+container definition, overlays the 13.60 Relapse frontend and payloads, and
+uploads `ps5-relapse-autoloader-installer.elf` as a workflow artifact. The
+official upstream project documents firmware support through 12.70; this
+workflow only reuses its generic installer/build machinery and must be tested
+on a 13.60 console before release.
+
 The published site is `https://manoharpadul.github.io/relapse/`.
