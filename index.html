@@ -156,28 +156,70 @@
       overflow: hidden;
   }
   .relapse-payload-screen {
-      margin-top: 10px;
-      background: var(--relapse-black);
+      margin-top: 0;
+      padding: 18px 30px 28px;
+      background: radial-gradient(circle at 50% -20%, #151515 0, var(--relapse-black) 52%);
       color: #fff;
       font: 16px/1.35 Arial, sans-serif;
       white-space: normal;
       word-break: normal;
   }
   .relapse-payload-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
       box-sizing: border-box;
-      min-height: 112px;
-      padding: 8px;
-      text-align: center;
+      min-height: 104px;
+      padding: 4px 2px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      text-align: left;
   }
-  .relapse-payload-header h2 { margin: 6px 0; color: #fff; font-size: 30px; line-height: 1.2; }
-  .relapse-payload-header .eyebrow { color: #7dff9e; font-size: 16px; }
-  .relapse-payload-header p { margin: 0; color: #ccc; font-size: 15px; }
+  .relapse-payload-brand { min-width: 0; }
+  .relapse-payload-kicker {
+      margin-bottom: 6px;
+      color: var(--relapse-green);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+  }
+  .relapse-payload-header h2 {
+      margin: 0;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+  }
+  .relapse-payload-header p { margin: 8px 0 0; color: #949494; font-size: 13px; }
+  .relapse-loader-badge {
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: 8px;
+      margin-bottom: 2px;
+      padding: 8px 11px;
+      border: 1px solid rgba(141,240,173,.25);
+      border-radius: 999px;
+      background: rgba(141,240,173,.06);
+      color: #b9cdbf;
+      font-size: 11px;
+      white-space: nowrap;
+  }
+  .relapse-loader-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--relapse-green);
+      box-shadow: 0 0 10px rgba(141,240,173,.7);
+  }
+  .relapse-payload-header .eyebrow { color: var(--relapse-green); font-size: 11px; }
   .relapse-payload-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px 36px;
+      gap: 14px;
       width: 100%;
-      padding: 0 32px 32px;
+      padding: 20px 0 4px;
       box-sizing: border-box;
       align-content: start;
       min-height: 0;
@@ -191,15 +233,15 @@
       width: 100%;
       min-width: 0;
       min-height: 92px;
-      margin: 3px;
-      padding: 16px 24px;
+      margin: 0;
+      padding: 16px 20px 15px 24px;
       box-sizing: border-box;
       border: 1px solid rgba(255,255,255,.1);
-      border-radius: 20px;
-      background: #181818;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #171717, #101010);
       color: #f4f4f4 !important;
       cursor: pointer;
-      text-align: center;
+      text-align: left;
       font: inherit;
       line-height: 1.5;
       outline: 0;
@@ -215,6 +257,18 @@
   }
   .relapse-payload-tile:focus { box-shadow: 0 0 0 3px rgba(141,240,173,.24); }
   .relapse-payload-tile:active { transform: scale(.99); }
+  .relapse-payload-tile::before {
+      content: "";
+      position: absolute;
+      width: 3px;
+      height: 34px;
+      margin-left: -13px;
+      border-radius: 4px;
+      background: #555;
+  }
+  .relapse-payload-tile { position: relative; }
+  .relapse-payload-tile:focus::before,
+  .relapse-payload-tile:hover::before { background: var(--relapse-green); }
   .relapse-payload-tile.busy { opacity: .5; pointer-events: none; }
   .relapse-payload-tile.sent { border: 2px solid #47c76a; }
   .relapse-payload-tile.failed { border: 2px solid #e74856; }
@@ -244,7 +298,9 @@
       line-height: 1.2;
   }
   @media (max-width: 760px) {
-      .relapse-payload-grid { grid-template-columns: 1fr; padding-left: 16px; padding-right: 16px; }
+      .relapse-payload-screen { padding-left: 16px; padding-right: 16px; }
+      .relapse-payload-header { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .relapse-payload-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -550,7 +606,7 @@ async function run() {
     buildPayloadMenu();
 }
 
-/** Tiles are PNGs: this browser lays text tiles out correctly and paints no glyphs. */
+/** Plain DOM cards keep text stable on PS5 WebKit and remain controller-focusable. */
 function buildPayloadMenu() {
     if (document.getElementById("relapse-payload-screen")) return;
     const tiles = (window.PAYLOAD_TILES || []).slice();
@@ -574,9 +630,15 @@ function buildPayloadMenu() {
     screen.className = "relapse-payload-screen";
     const header = document.createElement("div");
     header.className = "relapse-payload-header";
-    header.innerHTML = '<h2>PS5 Relapse Payloads</h2>'
-        + '<div class="eyebrow" id="relapse-payload-status">ELF loader ready on console port 9021</div>'
-        + '<p>Select a payload to send it to the ELF loader.</p>';
+    header.innerHTML = '<div class="relapse-payload-brand">'
+        + '<div class="relapse-payload-kicker">PS5 RELAPSE / PAYLOAD CENTER</div>'
+        + '<h2>Payloads</h2>'
+        + '<p>Select a payload to send it to the local ELF loader.</p>'
+        + '</div>'
+        + '<div class="relapse-loader-badge">'
+        + '<span class="relapse-loader-dot"></span>'
+        + '<span class="eyebrow" id="relapse-payload-status">Loader online · port 9021</span>'
+        + '</div>';
     const wrap = document.createElement("div");
     wrap.className = "relapse-payload-grid";
     screen.appendChild(header);
