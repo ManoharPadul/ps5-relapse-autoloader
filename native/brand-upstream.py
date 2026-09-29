@@ -20,6 +20,7 @@ def main() -> int:
         root / "assets" / "param.json.template",
         root / "include" / "wkali.h",
         root / "tools" / "gen_file_registry.py",
+        root / "tools" / "gen_icons.py",
         *sorted((root / "src").glob("*.c")),
         *sorted((root / "src").glob("*.h")),
     ]
@@ -36,6 +37,12 @@ def main() -> int:
             'if resolved.startswith("/"):\n'
             '                urls.add(resolved + query)',
         ),
+        ('every generated asset gets a dark background and ~10% padding added.',
+         'every generated asset gets a black background and ~10% padding added.'),
+        ('<stop offset="0%" stop-color="#0e182b"/>',
+         '<stop offset="0%" stop-color="#000000"/>'),
+        ('<stop offset="100%" stop-color="#060a13"/>',
+         '<stop offset="100%" stop-color="#000000"/>'),
     )
 
     changed = 0

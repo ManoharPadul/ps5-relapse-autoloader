@@ -24,7 +24,7 @@ def main() -> int:
       <circle cx="512" cy="512" r="512" />
     </clipPath>
   </defs>
-  <circle cx="512" cy="512" r="512" fill="#0b1220" />
+  <circle cx="512" cy="512" r="512" fill="#000000" />
   <image href="data:image/png;base64,{png}" x="0" y="0" width="1024" height="1024"
          preserveAspectRatio="xMidYMid slice" clip-path="url(#relapseCircle)" />
 </svg>
