@@ -11,7 +11,7 @@ frontend and payload bundle before compiling.
 
 The workflow uses the upstream `Dockerfile.sdk`, which installs the PS5 SDK and
 native dependencies inside the GitHub Actions runner. It produces an artifact
-named `ps5-relapse-autoloader-installer.elf`; it is not the pldmgr payload. Send
+named `ps5-relapse-autoloader-installer.0.1.elf`; it is not the pldmgr payload. Send
 that installer ELF once through the already-running elfldr, let it finish the
 one-time cache/install flow, then launch the installed homescreen app.
 
