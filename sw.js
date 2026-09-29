@@ -1,5 +1,5 @@
-const CACHE_NAME = "ps5-offline-v16";
-const OFFLINE_MARKER = "./__offline_ready_v16";
+const CACHE_NAME = "ps5-offline-v17";
+const OFFLINE_MARKER = "./__offline_ready_v17";
 
 const STATIC_ASSETS = [
   "./",
@@ -78,16 +78,12 @@ const OFFLINE_PAYLOADS = [
   "./payloads/elfldr-ps5-1360.elf",
   "./payloads/etaHEN.elf",
   "./payloads/ftpsrv-ps5.elf",
-  "./payloads/gdbsrv-ps5.elf",
   "./payloads/game-compressor.elf",
-  "./payloads/elf-arsenal.elf",
   "./payloads/kexp_2026_05_25.bin",
-  "./payloads/klogsrv-ps5.elf",
   "./payloads/kstuff.elf",
   "./payloads/nanodns.elf",
   "./payloads/pldmgr_v0.5.2.elf",
   "./payloads/shadowmountplus.elf",
-  "./payloads/shsrv-ps5.elf",
   "./payloads/websrv-ps5.elf"
 ];
 const OFFLINE_ASSETS = STATIC_ASSETS.concat(OFFLINE_PAYLOADS);
