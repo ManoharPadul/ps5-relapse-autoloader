@@ -44,7 +44,7 @@ payload menu in place. Each payload is sent through the console-side loader on
 
 1. Open the published page while the PS5 has internet access:
    [manoharpadul.github.io/relapse](https://manoharpadul.github.io/relapse/).
-2. Let the **v20** offline-cache step finish. Do not close the browser during this
+2. Let the **v21** offline-cache step finish. Do not close the browser during this
    first preparation pass.
 3. Run the jailbreak. If elfldr is already running, Relapse opens the payload
    path without repeating the kernel chain.
@@ -151,7 +151,7 @@ Screenshots are intentionally left as placeholders above. Add them later under
 
 - `index.html` owns the cache-first gate, jailbreak flow, payload menu, and pldmgr
   toggle.
-- `sw.js` downloads the offline bundle sequentially and writes the v20 marker only
+- `sw.js` downloads the offline bundle sequentially and writes the v21 marker only
   after the full bundle succeeds.
 - `.github/workflows/native-installer.yml` builds the native installer with the
   official PS5 SDK container definition.

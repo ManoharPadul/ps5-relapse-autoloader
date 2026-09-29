@@ -497,17 +497,17 @@ async function ensureOfflineCache() {
     }
 
     setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");
-    let registration = await navigator.serviceWorker.register("./sw.js?v=20", { scope: "./" });
+    let registration = await navigator.serviceWorker.register("./sw.js?v=21", { scope: "./" });
     try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
 
     let worker = null;
     for (let attempt = 0; attempt < 40; attempt++) {
         registration = await navigator.serviceWorker.ready;
         worker = registration.active;
-        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=20") !== -1) break;
+        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=21") !== -1) break;
         await sleep(250);
     }
-    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=20") === -1) {
+    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=21") === -1) {
         throw new Error("offline cache worker did not activate");
     }
 
@@ -746,7 +746,8 @@ function buildPayloadMenu() {
     screen.style.webkitTransform = "translateZ(0)";
     screen.style.transform = "translateZ(0)";
     void screen.offsetHeight;
-    try { wrap.firstChild.focus(); } catch (e) { /* not fatal */ }
+    // Do not focus the first tile: EtaHEN is first in the list and would look
+    // permanently selected whenever the menu is opened.
     print("elfldr is up - pick a payload", "LOG-SUCCESS");
 }
 
