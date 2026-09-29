@@ -185,36 +185,64 @@
       overflow-x: hidden;
   }
   .relapse-payload-tile {
-      display: block;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       width: 100%;
       min-width: 0;
+      min-height: 92px;
       margin: 3px;
       padding: 16px 24px;
       box-sizing: border-box;
-      border: 0;
+      border: 1px solid rgba(255,255,255,.1);
       border-radius: 20px;
-      background: #202125;
-      color: #fff;
+      background: #181818;
+      color: #f4f4f4 !important;
       cursor: pointer;
       text-align: center;
       font: inherit;
       line-height: 1.5;
+      outline: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
   }
   .relapse-payload-tile:hover,
-  .relapse-payload-tile:focus { outline: 0; background: #a2a2a6; color: #202020; }
-  .relapse-payload-tile:focus { box-shadow: 0 0 0 3px #ebcb8b; }
+  .relapse-payload-tile:focus {
+      background: #242424;
+      border-color: var(--relapse-green);
+      color: #f4f4f4 !important;
+  }
+  .relapse-payload-tile:focus { box-shadow: 0 0 0 3px rgba(141,240,173,.24); }
+  .relapse-payload-tile:active { transform: scale(.99); }
   .relapse-payload-tile.busy { opacity: .5; pointer-events: none; }
   .relapse-payload-tile.sent { border: 2px solid #47c76a; }
   .relapse-payload-tile.failed { border: 2px solid #e74856; }
-  .relapse-payload-title { display: block; margin: 0; color: #fff; font-size: 21px; font-weight: 800; }
-  .relapse-payload-description { display: block; margin: 0; color: #ccc; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .relapse-payload-info { display: block; margin: 0; color: #999; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .relapse-payload-tile:hover .relapse-payload-title,
-  .relapse-payload-tile:focus .relapse-payload-title { color: #202020; }
-  .relapse-payload-tile:hover .relapse-payload-description,
-  .relapse-payload-tile:focus .relapse-payload-description { color: #444; }
-  .relapse-payload-tile:hover .relapse-payload-info,
-  .relapse-payload-tile:focus .relapse-payload-info { color: #555; }
+  .relapse-payload-title {
+      display: block;
+      margin: 0;
+      color: #f4f4f4 !important;
+      font-family: Arial, sans-serif;
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1.2;
+  }
+  .relapse-payload-description {
+      display: block;
+      margin: 5px 0 0;
+      color: #c8c8c8 !important;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.25;
+  }
+  .relapse-payload-info {
+      display: block;
+      margin: 7px 0 0;
+      color: #8e8e8e !important;
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      line-height: 1.2;
+  }
   @media (max-width: 760px) {
       .relapse-payload-grid { grid-template-columns: 1fr; padding-left: 16px; padding-right: 16px; }
   }
@@ -555,8 +583,10 @@ function buildPayloadMenu() {
     screen.appendChild(wrap);
 
     for (const t of tiles) {
-        const a = document.createElement("button");
-        a.type = "button";
+        const a = document.createElement("div");
+        a.setAttribute("role", "button");
+        a.setAttribute("tabindex", "0");
+        a.setAttribute("aria-label", t.title);
         a.className = "relapse-payload-tile";
         const title = document.createElement("span");
         title.className = "relapse-payload-title";
@@ -603,6 +633,11 @@ function buildPayloadMenu() {
                 document.getElementById("relapse-payload-status").textContent = t.title + " failed";
                 print(t.title + ": " + message, "LOG-ERROR");
             }
+        });
+        a.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            a.click();
         });
         wrap.appendChild(a);
     }
