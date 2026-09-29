@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ps5-relapse-autoloader</title>
+<title>PS5 Relapse AutoLoader</title>
 <style>
   html, body { margin: 0; padding: 0; background: #0c0c0f; }
 
@@ -299,8 +299,19 @@ async function autoloadPldmgrIfEnabled() {
 }
 
 async function ensureOfflineCache() {
+    // The native installer has already completed the legacy AppCache download
+    // before it creates the homescreen shortcut.  PS5 WebKit does not need a
+    // second cache layer here, and some builds do not expose Service Workers.
+    // Starting the exploit directly also keeps the heap layout identical to
+    // the cached launch path.
+    if (location.hostname === "127.0.0.1" && location.port === "18181") {
+        setBootStatus("Native AppCache ready - starting jailbreak.", "LOG-SUCCESS");
+        return;
+    }
+
     if (!("serviceWorker" in navigator) || !("MessageChannel" in window)) {
-        throw new Error("offline cache requires service workers and MessageChannel");
+        setBootStatus("Service Worker unavailable - starting with the current bundle.", "LOG-WARN");
+        return;
     }
 
     setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");

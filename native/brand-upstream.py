@@ -19,6 +19,7 @@ def main() -> int:
         root / "frontend" / "autoloader" / "index.html",
         root / "assets" / "param.json.template",
         root / "include" / "wkali.h",
+        root / "tools" / "gen_file_registry.py",
         *sorted((root / "src").glob("*.c")),
         *sorted((root / "src").glob("*.h")),
     ]
@@ -29,6 +30,12 @@ def main() -> int:
         ("by PLK", "by ManoharPadul"),
         ("github.com/itsPLK/ps5-webkit-autoloader", "github.com/ManoharPadul/ps5-relapse-autoloader"),
         ('#define WKAL_VERSION "0.4.0"', '#define WKAL_VERSION "0.1.0"'),
+        (
+            'if resolved.startswith("/") and "/slopkit/" in resolved:\n'
+            '                urls.add(resolved + query)',
+            'if resolved.startswith("/"):\n'
+            '                urls.add(resolved + query)',
+        ),
     )
 
     changed = 0

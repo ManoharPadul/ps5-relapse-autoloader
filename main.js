@@ -2096,4 +2096,8 @@ async function main(userlandRW, wkOnly = false) {
 let fwScript = document.createElement("script");
 document.body.appendChild(fwScript);
 
-fwScript.setAttribute("src", `offsets/${window.fw_str}.js?v=` + Date.now());
+// The native installer uses a fixed AppCache manifest.  A timestamp query
+// would create a URL that was never listed in that manifest, so the firmware
+// profile could disappear offline even though offsets/<fw>.js was embedded.
+// The versioned app directory already provides cache invalidation on update.
+fwScript.setAttribute("src", `offsets/${window.fw_str}.js`);
