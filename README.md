@@ -9,6 +9,10 @@
   Supports Relapse firmware <b>7.00–13.60</b>.
 </p>
 
+Relapse AutoLoader v0.1.0 installs a cached Relapse application on the PS5. The
+native installer is an installation and cache tool; it does **not** jailbreak a
+clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` running.
+
 <!-- Add console screenshots here later.
 <p align="center">
   <img src="./.github/screenshots/relapse-jailbreak.jpg" width="260" alt="Relapse jailbreak screen" />
@@ -29,12 +33,19 @@ After elfldr is ready, Relapse keeps the exploit document alive and displays the
 payload menu in place. Each payload is sent through the console-side loader on
 `127.0.0.1:9021`, so the public static page does not need a server-side socket.
 
+## Requirements
+
+- PS5 firmware supported by the Relapse frontend: **7.00–13.60**.
+- A PS5 that is already jailbroken for the native installer step.
+- `elfldr` listening on console port `9021`.
+- Wi-Fi or Ethernet/LAN enabled on the PS5 during jailbreak sessions.
+
 ## Current browser setup
 
-1. Open the published page while the PS5 is online:
+1. Open the published page while the PS5 has internet access:
    [manoharpadul.github.io/relapse](https://manoharpadul.github.io/relapse/).
-2. Let the offline-cache step finish. Do not close the browser during this first
-   preparation pass.
+2. Let the **v19** offline-cache step finish. Do not close the browser during this
+   first preparation pass.
 3. Run the jailbreak. If elfldr is already running, Relapse opens the payload
    path without repeating the kernel chain.
 4. On later runs, open the same bookmarked page. The completed cache is used first.
@@ -51,20 +62,42 @@ opens instead.
 
 ## Network use
 
-The first cache preparation needs an internet connection. After the page reports
-that the offline cache is ready, the internet can be disabled, but keep the PS5
-connected to the same local Wi-Fi/LAN as the device used to open its services. A
-local network interface is important for the 13.60 chain; disabling Wi-Fi entirely
-can produce `kaslr: no configured interface` or routing failures.
+The first installation and cache preparation need internet access. After the page
+reports that the offline cache is ready, internet access can be disabled, but keep
+the PS5 connected to the same local Wi-Fi/LAN as the device used to access its
+services.
+
+| Connection | Needed for |
+|---|---|
+| Internet/WAN | First cache setup and online downloads |
+| Wi-Fi or Ethernet/LAN | Local PS5 networking and normal jailbreak sessions |
+| Internet after caching | Not required |
+
+Completely disabling Wi-Fi and disconnecting LAN may cause `kaslr: no configured
+interface` or routing failures on some 13.60 runs. If PS5 browser data is cleared,
+the cache must be prepared again while online.
 
 ## Payloads
 
-The menu includes the bundled Relapse-compatible payloads, including pldmgr,
-nanodns, shadowmountplus, Game Compressor 1.0.4, and kstuff. Game Compressor is
-rebuilt from its current source with the Relapse
-PS5 SDK and tagged `13.60`; it is cached locally with the rest of the payloads
-and opens its PS5-side UI on port 5910 after it is sent. The pldmgr entry is v0.5.2;
-the obsolete v0.5.1 binary is not included.
+The menu includes the bundled Relapse-compatible payloads. Payloads are sent to
+the local ELF loader on port `9021`.
+
+| Payload | Service port |
+|---|---:|
+| etaHEN | 9021 |
+| ps5-kstuff | 9021 |
+| ftpsrv | 2121 |
+| websrv | 8080 |
+| PLK Manager v0.5.2 | 8084 |
+| nanodns | 9021 |
+| shadowmountplus | 9021 |
+| Game Compressor 1.0.4 | 5910 |
+
+Game Compressor is rebuilt with the Relapse PS5 SDK for the 13.60 payload set.
+PLK Manager v0.5.2 is included; the obsolete v0.5.1 binary is not included.
+
+`127.0.0.1` refers to the PS5 itself. From another device, use the PS5's local
+IP address, for example `http://<PS5-IP>:8084/` for PLK Manager.
 
 ## Firmware coverage
 
@@ -85,6 +118,25 @@ upstream installer/build machinery while replacing the staged application with
 the 13.60 Relapse frontend and payload bundle. The build also embeds the supplied
 portrait as the PS5 homescreen icon.
 
+The v0.1.0 installer is named:
+
+```text
+ps5-relapse-autoloader-installer.0.1.elf
+```
+
+Installation flow:
+
+1. Jailbreak the PS5 and start `elfldr` on `127.0.0.1:9021`.
+2. Send the installer ELF through the existing payload menu.
+3. Let the temporary local installer server stage the cache and create the
+   homescreen application.
+4. Launch **PS5 Relapse AutoLoader** from the PS5 Media section.
+
+The complete release text is in
+[`RELEASE_NOTES_v0.1.0.md`](RELEASE_NOTES_v0.1.0.md). The native ELF must be tested
+on the target PS5 before release; a successful compiler build does not guarantee
+that every payload or firmware configuration will work.
+
 The official upstream autoloader README documents a different firmware range,
 ending at 12.70; its native installer is therefore treated here as generic cache
 and homescreen-installation machinery, not as the 13.60 exploit chain. The native
@@ -99,8 +151,8 @@ Screenshots are intentionally left as placeholders above. Add them later under
 
 - `index.html` owns the cache-first gate, jailbreak flow, payload menu, and pldmgr
   toggle.
-- `sw.js` downloads payloads sequentially and writes the offline marker only after
-  the full bundle succeeds.
+- `sw.js` downloads the offline bundle sequentially and writes the v19 marker only
+  after the full bundle succeeds.
 - `.github/workflows/native-installer.yml` builds the native installer with the
   official PS5 SDK container definition.
 
