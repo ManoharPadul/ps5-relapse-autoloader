@@ -53,8 +53,9 @@ opens instead.
 
 The menu includes the bundled Relapse-compatible payloads, including pldmgr,
 nanodns, shadowmountplus, Game Compressor 1.0.4, elf-arsenal, kstuff, gdbsrv,
-and shsrv. Game Compressor is cached locally with the rest of the payloads and
-opens its PS5-side UI on port 5910 after it is sent. The pldmgr entry is v0.5.2;
+and shsrv. Game Compressor is rebuilt from its current source with the Relapse
+PS5 SDK and tagged `13.60`; it is cached locally with the rest of the payloads
+and opens its PS5-side UI on port 5910 after it is sent. The pldmgr entry is v0.5.2;
 the obsolete v0.5.1 binary is not included.
 
 ## Firmware coverage
