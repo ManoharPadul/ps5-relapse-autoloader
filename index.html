@@ -64,8 +64,10 @@
       border-radius: 999px;
       background: #2a2a2a;
       box-sizing: border-box;
+      cursor: pointer;
       transition: background .16s ease, border-color .16s ease;
   }
+  .relapse-switch.is-disabled { opacity: .45; pointer-events: none; }
   .relapse-switch::after {
       content: "";
       display: block;
@@ -365,7 +367,7 @@
       <span class="relapse-boot-title">Autoload pldmgr</span>
       <span class="relapse-boot-description">Start pldmgr five seconds after a successful jailbreak.</span>
     </span>
-    <span class="relapse-switch" aria-hidden="true"></span>
+    <span id="autoload-pldmgr-switch" class="relapse-switch" role="switch" tabindex="0" aria-checked="false"></span>
   </label>
   <div id="relapse-boot-status">Offline cache will be prepared before jailbreak.</div>
 </section>
@@ -464,6 +466,7 @@ function reportFailure(error) {
 
 const AUTOLOAD_PLDMGR_KEY = "relapse.autoloadPldmgr";
 const autoloadPldmgrToggle = document.getElementById("autoload-pldmgr");
+const autoloadPldmgrSwitch = document.getElementById("autoload-pldmgr-switch");
 const bootStatus = document.getElementById("relapse-boot-status");
 
 function setBootStatus(message, level) {
@@ -481,13 +484,51 @@ function saveAutoloadPldmgrSetting(enabled) {
     catch (e) { /* private browsing may disable storage */ }
 }
 
+function syncAutoloadPldmgrVisual() {
+    if (!autoloadPldmgrToggle) return;
+    if (autoloadPldmgrSwitch)
+        autoloadPldmgrSwitch.setAttribute("aria-checked", autoloadPldmgrToggle.checked ? "true" : "false");
+}
+
+function setAutoloadPldmgr(enabled) {
+    if (!autoloadPldmgrToggle) return;
+    autoloadPldmgrToggle.checked = !!enabled;
+    syncAutoloadPldmgrVisual();
+    saveAutoloadPldmgrSetting(autoloadPldmgrToggle.checked);
+    setBootStatus(autoloadPldmgrToggle.checked
+        ? "pldmgr autoload enabled for the next successful jailbreak."
+        : "pldmgr autoload disabled; the normal payload menu will open.");
+}
+
 if (autoloadPldmgrToggle) {
     autoloadPldmgrToggle.checked = loadAutoloadPldmgrSetting();
+    syncAutoloadPldmgrVisual();
     autoloadPldmgrToggle.addEventListener("change", () => {
+        syncAutoloadPldmgrVisual();
         saveAutoloadPldmgrSetting(autoloadPldmgrToggle.checked);
         setBootStatus(autoloadPldmgrToggle.checked
             ? "pldmgr autoload enabled for the next successful jailbreak."
             : "pldmgr autoload disabled; the normal payload menu will open.");
+    });
+}
+
+// Do not rely only on a label forwarding click to a 1px transparent input:
+// PS5 WebKit can leave that label checked after the first controller click.
+// The visible switch toggles the checkbox directly and the label remains a
+// second path for clicking the text/card.
+if (autoloadPldmgrSwitch && autoloadPldmgrToggle) {
+    autoloadPldmgrSwitch.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!autoloadPldmgrToggle.disabled)
+            setAutoloadPldmgr(!autoloadPldmgrToggle.checked);
+    });
+    autoloadPldmgrSwitch.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (!autoloadPldmgrToggle.disabled)
+            setAutoloadPldmgr(!autoloadPldmgrToggle.checked);
     });
 }
 
@@ -496,6 +537,7 @@ async function autoloadPldmgrIfEnabled() {
     if (typeof window.__sendPayload !== "function") return false;
 
     autoloadPldmgrToggle.disabled = true;
+    if (autoloadPldmgrSwitch) autoloadPldmgrSwitch.classList.add("is-disabled");
     for (let seconds = 5; seconds > 0; seconds--) {
         setBootStatus("pldmgr autoload enabled - sending in " + seconds + " second" + (seconds === 1 ? "" : "s") + "...", "LOG-INFO");
         await sleep(1000);
@@ -518,6 +560,7 @@ async function autoloadPldmgrIfEnabled() {
         print("pldmgr autoload: " + String((error && error.message) || error), "LOG-ERROR");
     }
     autoloadPldmgrToggle.disabled = false;
+    if (autoloadPldmgrSwitch) autoloadPldmgrSwitch.classList.remove("is-disabled");
     return false;
 }
 
@@ -538,17 +581,17 @@ async function ensureOfflineCache() {
     }
 
     setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");
-    let registration = await navigator.serviceWorker.register("./sw.js?v=23", { scope: "./" });
+    let registration = await navigator.serviceWorker.register("./sw.js?v=24", { scope: "./" });
     try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
 
     let worker = null;
     for (let attempt = 0; attempt < 40; attempt++) {
         registration = await navigator.serviceWorker.ready;
         worker = registration.active;
-        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=23") !== -1) break;
+        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=24") !== -1) break;
         await sleep(250);
     }
-    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=23") === -1) {
+    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=24") === -1) {
         throw new Error("offline cache worker did not activate");
     }
 
