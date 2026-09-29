@@ -45,6 +45,7 @@ jobs:
           cp assets/icon.svg .native-upstream/assets/icon.svg
           cp assets/relapse-icon.png .native-upstream/assets/relapse-icon.png
           python3 native/embed-icon.py .native-upstream
+          python3 native/brand-upstream.py .native-upstream
 
       - name: Build the official PS5 SDK container
         run: docker build -t ps5-relapse-autoloader-sdk \
