@@ -345,44 +345,55 @@
       pointer-events: none;
   }
   body.payload-only-mode .relapse-payload-screen {
-      display: block;
-      overflow: visible;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
       box-sizing: border-box;
   }
   .relapse-payload-grid {
-      display: block;
-      overflow: visible;
-  }
-  .relapse-payload-grid::after {
-      content: "";
-      display: block;
-      clear: both;
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 16px 36px !important;
+      width: 100% !important;
+      padding: 0 32px 32px !important;
+      box-sizing: border-box !important;
+      align-content: start !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
   }
   .relapse-payload-grid .relapse-payload-tile {
-      display: block;
-      float: left;
-      width: 48%;
-      margin: 8px 1%;
-      min-height: 120px;
+      display: block !important;
+      float: none !important;
+      width: 100% !important;
+      margin: 0 !important;
+      min-height: 104px !important;
+      padding: 0 !important;
+      position: relative;
+      z-index: 2;
       transition: none;
       transform: none;
       -webkit-transform: none;
   }
-  .relapse-payload-grid .relapse-payload-tile:nth-child(odd) { clear: left; }
   @media (max-width: 760px) {
-      .relapse-payload-grid .relapse-payload-tile { width: 98%; }
+      .relapse-payload-grid {
+          grid-template-columns: 1fr !important;
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+      }
   }
   .relapse-payload-grid .relapse-payload-tile {
-      padding: 0;
-      min-height: 0;
       background: #202125;
   }
   .relapse-payload-art {
-      display: block;
-      width: 100%;
-      height: auto;
-      visibility: visible;
-      opacity: 1;
+      display: block !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 104px;
+      visibility: visible !important;
+      opacity: 1 !important;
+      position: relative;
+      z-index: 3;
   }
   .relapse-payload-tile:focus,
   .relapse-payload-tile:hover { outline: 3px solid #8df0ad; }
