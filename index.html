@@ -349,28 +349,27 @@
       box-sizing: border-box;
   }
   .relapse-payload-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px 36px;
-      padding: 0 32px 32px;
+      display: block;
       overflow: visible;
   }
+  .relapse-payload-grid::after {
+      content: "";
+      display: block;
+      clear: both;
+  }
   .relapse-payload-grid .relapse-payload-tile {
-      display: flex;
-      flex: 0 0 calc(50% - 18px);
-      width: auto;
-      margin: 0;
+      display: block;
+      float: left;
+      width: 48%;
+      margin: 8px 1%;
       min-height: 120px;
       transition: none;
       transform: none;
       -webkit-transform: none;
   }
+  .relapse-payload-grid .relapse-payload-tile:nth-child(odd) { clear: left; }
   @media (max-width: 760px) {
-      .relapse-payload-grid { padding-left: 16px; padding-right: 16px; }
-      .relapse-payload-grid .relapse-payload-tile {
-          flex-basis: 100%;
-          width: 100%;
-      }
+      .relapse-payload-grid .relapse-payload-tile { width: 98%; }
   }
   .relapse-payload-grid .relapse-payload-tile {
       padding: 0;
@@ -855,8 +854,6 @@ function buildPayloadMenu() {
     screen.appendChild(header);
     screen.appendChild(wrap);
 
-    const isNativeApp = window.__RELAPSE_NATIVE_APP === true
-        || (location.hostname === "127.0.0.1" && location.port === "18181");
     // All cards share one native sender; never run two sends concurrently.
     let sendingPayload = false;
     for (const t of tiles) {
@@ -892,15 +889,7 @@ function buildPayloadMenu() {
             a.appendChild(description);
             a.appendChild(info);
         };
-        // Native PS5 WebKit can defer painting embedded PNGs until hover. Keep
-        // its cards text-native; the public website retains the artwork cards.
-        if (isNativeApp) {
-            a.appendChild(title);
-            a.appendChild(description);
-            a.appendChild(info);
-        } else {
-            a.appendChild(art);
-        }
+        a.appendChild(art);
         a.addEventListener("click", async (e) => {
             e.preventDefault();
             if (sendingPayload) return;
@@ -954,6 +943,8 @@ function buildPayloadMenu() {
     // Keep the menu outside the scrolling log and its visibility rules.
     // A fresh rendering document avoids reusing the exploited page's paint
     // layers. The original document and its sender remain alive throughout.
+    const isNativeApp = window.__RELAPSE_NATIVE_APP === true
+        || (location.hostname === "127.0.0.1" && location.port === "18181");
     let menuDocument = document;
     if (isNativeApp) {
         // Keep native payload cards in the exploited document. Moving a live
