@@ -67,6 +67,19 @@ reports that the offline cache is ready, internet access can be disabled, but ke
 the PS5 connected to the same local Wi-Fi/LAN as the device used to access its
 services.
 
+### A local IP address is required for the jailbreak
+
+The PS5 must receive an IPv4 address from the Wi-Fi access point or Ethernet
+router before starting the jailbreak. Check **Settings > Network > View Connection
+Status** and confirm that **Obtain IP Address** is successful. Examples are
+`192.168.1.x` on a home router or commonly `172.20.10.x` on an iPhone hotspot.
+
+The internet connection itself is not required. A router with its WAN/internet
+disconnected is fine as long as DHCP still gives the PS5 a local IP address. An
+iPhone hotspot with cellular data disabled may fail to provide a usable local
+interface, depending on the carrier and iPhone state. `127.0.0.1` is only PS5
+loopback and does not count as the required Wi-Fi/LAN address.
+
 | Connection | Needed for |
 |---|---|
 | Internet/WAN | First cache setup and online downloads |
@@ -79,6 +92,11 @@ exploit uses the PS5 route table for its 13.60 KASLR step; `127.0.0.1` loopback 
 not sufficient. If the network test reports no IP address, use a DHCP-enabled
 router/hotspot or Ethernet connection, even if that network has no WAN internet.
 If PS5 browser data is cleared, the cache must be prepared again while online.
+
+If the address is blank, `0.0.0.0`, or the exploit reports `no local IPv4
+interface`, reconnect the PS5 to a DHCP-enabled Wi-Fi/LAN and retry. The cached
+browser files can be offline, but the jailbreak still needs the local network
+interface.
 
 ## Payloads
 

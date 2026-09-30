@@ -14,6 +14,8 @@
   payload cards blank until the cursor moved over them.
 - Kept the exploit document and console-side ELF sender alive behind the payload
   screen, including the 13.60 payload list and optional PLK Manager autoload.
+- Removed the unsafe loopback fallback from the native 13.60 KASLR route step and
+  added a short wait for Wi-Fi/LAN DHCP initialization.
 
 ## Build artifact
 
@@ -33,3 +35,9 @@ Internet access is not needed after caching, but Wi-Fi or Ethernet/LAN must stil
 provide a real local IPv4 address. Loopback-only networking cannot satisfy the
 13.60 route-based KASLR step. The build must be tested on the target PS5 before
 treating the release as fully verified.
+
+Before starting, check **Settings > Network > View Connection Status**. The PS5
+must show a successful IP address such as `192.168.1.x` or an iPhone-hotspot
+address such as `172.20.10.x`. If it only has `127.0.0.1`, no address, or
+`0.0.0.0`, the jailbreak will stop with a local-interface error. This is a LAN
+requirement, not an internet requirement.
