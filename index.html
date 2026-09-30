@@ -751,12 +751,26 @@ async function establishUserlandPrimitive() {
     return p;
 }
 
+async function waitForJailbreakStartup() {
+    // Allow initial document resources to finish before starting the countdown.
+    // This is a startup grace period, not a guarantee of exploit stability.
+    if (document.readyState !== "complete") {
+        await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
+    }
+    for (let seconds = 5; seconds > 0; seconds--) {
+        setBootStatus("Cache preparation finished. Jailbreak starts in " + seconds + " seconds...", "LOG-INFO");
+        await sleep(1000);
+    }
+    setBootStatus("Starting jailbreak...", "LOG-INFO");
+}
+
 async function run() {
     const rejection = window.firmware.rejection();
     if (rejection) throw new Error(rejection);
 
     await ensureOfflineCache();
     await offsetsReady;
+    await waitForJailbreakStartup();
     print("firmware " + window.fw_str, "LOG-INFO");
 
     const p = await establishUserlandPrimitive();
