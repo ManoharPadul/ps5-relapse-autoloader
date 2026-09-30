@@ -66,13 +66,13 @@ jobs:
             -v "$PWD/.native-upstream:/src" \
             -w /src \
             ps5-relapse-autoloader-sdk make clean all
-          cp .native-upstream/installer.elf ps5-relapse-autoloader-installer.0.1.elf
-          sha256sum ps5-relapse-autoloader-installer.0.1.elf > ps5-relapse-autoloader-installer.0.1.elf.sha256
+          cp .native-upstream/installer.elf ps5-relapse-autoloader-installer.0.2.0.elf
+          sha256sum ps5-relapse-autoloader-installer.0.2.0.elf > ps5-relapse-autoloader-installer.0.2.0.elf.sha256
 
       - name: Upload native installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: ps5-relapse-autoloader-installer-13.60
           path: |
-            ps5-relapse-autoloader-installer.0.1.elf
-            ps5-relapse-autoloader-installer.0.1.elf.sha256
+            ps5-relapse-autoloader-installer.0.2.0.elf
+            ps5-relapse-autoloader-installer.0.2.0.elf.sha256

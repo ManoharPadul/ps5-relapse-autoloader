@@ -9,7 +9,7 @@
   Supports Relapse firmware <b>7.00–13.60</b>.
 </p>
 
-Relapse AutoLoader v0.1.0 installs a cached Relapse application on the PS5. The
+Relapse AutoLoader v0.2.0 installs a cached Relapse application on the PS5. The
 native installer is an installation and cache tool; it does **not** jailbreak a
 clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` running.
 
@@ -118,10 +118,10 @@ upstream installer/build machinery while replacing the staged application with
 the 13.60 Relapse frontend and payload bundle. The build also embeds the supplied
 portrait as the PS5 homescreen icon.
 
-The v0.1.0 installer is named:
+The v0.2.0 installer is named:
 
 ```text
-ps5-relapse-autoloader-installer.0.1.elf
+ps5-relapse-autoloader-installer.0.2.0.elf
 ```
 
 Installation flow:
@@ -133,7 +133,7 @@ Installation flow:
 4. Launch **PS5 Relapse AutoLoader** from the PS5 Media section.
 
 The complete release text is in
-[`RELEASE_NOTES_v0.1.0.md`](RELEASE_NOTES_v0.1.0.md). The native ELF must be tested
+[`RELEASE_NOTES_v0.2.0.md`](RELEASE_NOTES_v0.2.0.md). The native ELF must be tested
 on the target PS5 before release; a successful compiler build does not guarantee
 that every payload or firmware configuration will work.
 

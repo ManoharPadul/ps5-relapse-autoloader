@@ -19,6 +19,7 @@ def main() -> int:
         root / "frontend" / "autoloader" / "index.html",
         root / "assets" / "param.json.template",
         root / "include" / "wkali.h",
+        root / "Makefile",
         root / "tools" / "gen_file_registry.py",
         root / "tools" / "gen_icons.py",
         *sorted((root / "src").glob("*.c")),
@@ -30,7 +31,15 @@ def main() -> int:
         ("WebKit Autoloader", "PS5 Relapse"),
         ("by PLK", "by ManoharPadul"),
         ("github.com/itsPLK/ps5-webkit-autoloader", "github.com/ManoharPadul/ps5-relapse-autoloader"),
-        ('#define WKAL_VERSION "0.4.0"', '#define WKAL_VERSION "0.1.0"'),
+        ('#define WKAL_VERSION "0.4.0"', '#define WKAL_VERSION "0.2.0"'),
+        # Also allow rebuilding an already-staged local upstream tree without
+        # first recloning it from the upstream 0.4.0 tag.
+        ('#define WKAL_VERSION "0.1.0"', '#define WKAL_VERSION "0.2.0"'),
+        (
+            '@V=$$($(PYTHON) tools/gen_version.py --print); \\\n',
+            '@V=$$(awk -F\'"\' \'/^#define WKAL_FULL_VERSION/{print $$2; exit}\' $(VERSION_HEADER)); \\\n'
+            '\ttest -n "$$V"; \\\n',
+        ),
         (
             'if resolved.startswith("/") and "/slopkit/" in resolved:\n'
             '                urls.add(resolved + query)',

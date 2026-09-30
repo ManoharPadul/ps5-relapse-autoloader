@@ -1,0 +1,30 @@
+# PS5 Relapse AutoLoader v0.2.0
+
+## What changed
+
+- Changed the native installer/cache version from `0.1.0` to `0.2.0`.
+- Every native build now creates a new versioned AppCache directory and
+  completeness marker, so the pointer page can reject an older cached bundle.
+- Matched the ELF payload screen to the working Relapse website: a fresh iframe
+  rendering document and the PS5-compatible block/float card layout.
+- Removed the native CSS Grid override and eager image flags that could leave
+  payload cards blank until the cursor moved over them.
+- Kept the exploit document and console-side ELF sender alive behind the payload
+  screen, including the 13.60 payload list and optional PLK Manager autoload.
+
+## Build artifact
+
+```text
+ps5-relapse-autoloader-installer.0.2.0.elf
+ps5-relapse-autoloader-installer.0.2.0.elf.sha256
+```
+
+## Important
+
+This is a native installer/cache ELF, not a standalone jailbreak for a clean
+console. Start the supported jailbreak chain and `elfldr` on port `9021`, then
+send the installer ELF. Reinstalling this version stages the new cache bundle;
+the target PS5 still needs Wi-Fi or Ethernet/LAN for the local console services.
+
+The build must be tested on the target PS5 before treating the release as fully
+verified.

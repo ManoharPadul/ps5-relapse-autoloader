@@ -333,62 +333,68 @@
       .relapse-payload-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .relapse-payload-grid { grid-template-columns: 1fr; }
   }
-  /* Once the payload screen is a body sibling, remove the exploited log layer
-     completely. Keeping the old console 100000px offscreen leaves a stale
-     paint/compositing layer on PS5 WebKit and can stop the new cards painting. */
+  /* Match the working GitHub Relapse layout. PS5 WebKit paints the payload
+     buttons more reliably in normal block flow than in a new CSS Grid. */
   body.payload-mode #console {
-      display: none !important;
+      position: absolute;
+      left: -100000px;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      min-height: 0;
+      overflow: hidden;
+      pointer-events: none;
   }
   body.payload-only-mode .relapse-payload-screen {
-      display: grid;
-      grid-template-rows: auto 1fr;
-      overflow: hidden;
+      display: block;
+      overflow: visible;
       box-sizing: border-box;
+      padding: 12px 20px 20px;
+      margin: 0 auto;
+      max-width: 1320px;
+      background: #0c0c0f;
   }
   .relapse-payload-grid {
-      display: grid !important;
-      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 16px 36px !important;
-      width: 100% !important;
-      padding: 0 32px 32px !important;
-      box-sizing: border-box !important;
-      align-content: start !important;
-      min-height: 0 !important;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
+      display: block;
+      overflow: visible;
+      width: 100%;
+      padding: 0;
+      box-sizing: border-box;
+  }
+  .relapse-payload-grid::after {
+      content: "";
+      display: block;
+      clear: both;
   }
   .relapse-payload-grid .relapse-payload-tile {
-      display: block !important;
-      float: none !important;
-      width: 100% !important;
-      margin: 0 !important;
-      min-height: 104px !important;
-      padding: 0 !important;
+      display: block;
+      float: left;
+      width: 48%;
+      margin: 8px 1%;
+      min-height: 0;
+      padding: 0;
       position: relative;
-      z-index: 2;
       transition: none;
       transform: none;
       -webkit-transform: none;
+      background: #202125;
+      border: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: none;
+  }
+  .relapse-payload-grid .relapse-payload-tile:nth-child(odd) {
+      clear: left;
   }
   @media (max-width: 760px) {
-      .relapse-payload-grid {
-          grid-template-columns: 1fr !important;
-          padding-left: 16px !important;
-          padding-right: 16px !important;
-      }
-  }
-  .relapse-payload-grid .relapse-payload-tile {
-      background: #202125;
+      .relapse-payload-grid .relapse-payload-tile { width: 98%; }
   }
   .relapse-payload-art {
-      display: block !important;
-      width: 100% !important;
-      height: auto !important;
-      min-height: 104px;
-      visibility: visible !important;
-      opacity: 1 !important;
-      position: relative;
-      z-index: 3;
+      display: block;
+      width: 100%;
+      height: auto;
+      visibility: visible;
+      opacity: 1;
   }
   .relapse-payload-tile:focus,
   .relapse-payload-tile:hover { outline: 3px solid #8df0ad; }
@@ -427,12 +433,6 @@
   }
   .relapse-payload-tile::before { content: none; }
 
-  /* A real style change is applied after insertion because PS5 WebKit may
-     postpone the first paint of DOM created immediately after the exploit. */
-  .relapse-payload-tile.relapse-repaint-pass {
-      outline: 1px solid rgba(255,255,255,.001) !important;
-      background: #212226 !important;
-  }
 </style>
 </head>
 <body>
@@ -892,8 +892,6 @@ function buildPayloadMenu() {
         art.alt = t.title;
         art.width = 626;
         art.height = 104;
-        art.loading = "eager";
-        art.decoding = "sync";
         // Absolute URLs remain correct inside the about:blank menu frame.
         art.src = new URL("ui/btn-" + t.key + "-default.png", location.href).href;
         art.onerror = () => {
@@ -954,39 +952,26 @@ function buildPayloadMenu() {
     // hidden subtree: PS5 WebKit can leave its text unpainted until a hover
     // or focus event.
     document.body.classList.add("payload-mode", "payload-only-mode");
-    // Keep the payload menu in THIS document on every launch path.
-    // PS5 WebKit can create the DOM inside an about:blank iframe but defer the
-    // first paint until pointer/controller hover. Keeping the cards in the
-    // exploited document avoids that stale-layer/repaint bug and also preserves
-    // direct access to the exploit-side payload sender.
-    const bootOptions = document.getElementById("relapse-boot-options");
-    if (bootOptions) document.body.insertBefore(screen, bootOptions);
-    else document.body.appendChild(screen);
-
-    // PS5 WebKit can leave newly-created card layers unpainted after the
-    // exploit. Hover used to fix one card because :hover caused a real style
-    // invalidation. Reproduce that invalidation for every card without moving
-    // the pointer or leaving controller focus on a tile. Use timers instead of
-    // requestAnimationFrame because rAF can be unreliable immediately after
-    // the jailbreak handoff.
-    void document.body.offsetHeight;
-    const paintTiles = Array.from(wrap.children);
-    let paintIndex = 0;
-    const repaintNextTile = () => {
-        if (paintIndex >= paintTiles.length) {
-            window.scrollTo(0, 0);
-            return;
-        }
-        const tile = paintTiles[paintIndex++];
-        tile.classList.add("relapse-repaint-pass");
-        void tile.offsetHeight;
-        setTimeout(() => {
-            tile.classList.remove("relapse-repaint-pass");
-            void tile.offsetHeight;
-            setTimeout(repaintNextTile, 0);
-        }, 0);
-    };
-    setTimeout(repaintNextTile, 0);
+    // Match the working Relapse website: put the payload screen in a fresh
+    // rendering document after the exploit completes.  PS5 WebKit can retain
+    // the exploit console's compositor layer and leave newly-created cards
+    // visually blank until hover.  The iframe gives the cards an independent
+    // paint tree, while this parent document remains alive and continues to
+    // own the exploit primitive and __sendPayload function.
+    const frame = document.createElement("iframe");
+    frame.id = "relapse-payload-frame";
+    frame.title = "Relapse payload menu";
+    frame.setAttribute("scrolling", "no");
+    frame.style.cssText = "display:block;width:100%;height:100vh;border:0;background:#000";
+    document.body.appendChild(frame);
+    const menuDocument = frame.contentDocument;
+    menuDocument.open();
+    menuDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>PS5 Relapse Payloads</title></head><body class="payload-mode payload-only-mode"></body></html>');
+    menuDocument.close();
+    const menuStyle = menuDocument.createElement("style");
+    menuStyle.textContent = document.querySelector("style").textContent;
+    menuDocument.head.appendChild(menuStyle);
+    menuDocument.body.appendChild(screen);
     document.getElementById("console").scrollTop = 0;
     window.scrollTo(0, 0);
     void screen.offsetHeight;
