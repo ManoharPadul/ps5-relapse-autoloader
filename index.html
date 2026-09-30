@@ -336,14 +336,7 @@
   /* Match the working GitHub Relapse layout. PS5 WebKit paints the payload
      buttons more reliably in normal block flow than in a new CSS Grid. */
   body.payload-mode #console {
-      position: absolute;
-      left: -100000px;
-      top: 0;
-      width: 1px;
-      height: 1px;
-      min-height: 0;
-      overflow: hidden;
-      pointer-events: none;
+      display: none !important;
   }
   body.payload-only-mode .relapse-payload-screen {
       display: block;
@@ -433,6 +426,30 @@
   }
   .relapse-payload-tile::before { content: none; }
 
+  /* Pre-create and PAINT the payload UI before the jailbreak.  Do not use
+     display:none/visibility:hidden: those states let older PS5 WebKit defer the
+     first real paint until hover.  The screen stays laid out far off-screen and
+     is simply brought back into normal flow after the exploit completes. */
+  .relapse-payload-screen.relapse-prebuilt {
+      display: block !important;
+      position: absolute !important;
+      left: -100000px !important;
+      top: 0 !important;
+      width: 1280px !important;
+      min-height: 720px !important;
+      margin: 0 !important;
+      padding: 12px 20px 20px !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      pointer-events: none !important;
+      overflow: visible !important;
+  }
+  .relapse-payload-screen.relapse-prebuilt .relapse-payload-grid {
+      display: block !important;
+      overflow: visible !important;
+  }
+
+  body.payload-only-mode #relapse-boot-options { display: none !important; }
 </style>
 </head>
 <body>
@@ -812,13 +829,20 @@ async function run() {
         print("elfldr was not confirmed yet; opening the payload menu anyway", "LOG-WARN");
     if (await autoloadPldmgrIfEnabled()) return;
     print("jailbreak complete - opening payload menu", "LOG-SUCCESS");
-    await sleep(0); // give WebKit one paint turn before building the first menu
-    buildPayloadMenu();
+    await sleep(0);
+    showPayloadMenu();
 }
 
-/** Plain DOM cards keep text stable on PS5 WebKit and remain controller-focusable. */
-function buildPayloadMenu() {
-    if (document.getElementById("relapse-payload-screen")) return;
+/**
+ * Build the payload DOM before the exploit begins.  The screen is kept far
+ * off-screen (not display:none) so PS5 WebKit has time to create image/button
+ * paint layers during the normal five-second startup window.
+ */
+let preparedPayloadUI = null;
+
+function preparePayloadMenu() {
+    if (preparedPayloadUI) return preparedPayloadUI;
+
     const tiles = (window.PAYLOAD_TILES || []).slice();
     const fallbackTiles = [
         { title: "PLK Manager v0.5.2 (13.60)", description: "Rebuilt with latest SDK. Open PS5-IP:8084.", name: "pldmgr_v0.5.2.elf", key: "pldmgr-v052", art: false },
@@ -829,40 +853,35 @@ function buildPayloadMenu() {
     for (const fallback of fallbackTiles) {
         if (!tiles.some((tile) => tile.name === fallback.name)) tiles.push(fallback);
     }
-    if (!tiles.length) return print("no payload list (payloads.js missing)", "LOG-ERROR");
+    if (!tiles.length) {
+        print("no payload list (payloads.js missing)", "LOG-ERROR");
+        return null;
+    }
 
     const screen = document.createElement("section");
     screen.id = "relapse-payload-screen";
-    screen.className = "relapse-payload-screen";
+    screen.className = "relapse-payload-screen relapse-prebuilt";
+
     const header = document.createElement("div");
     header.className = "relapse-payload-header";
-    header.innerHTML = '<div class="relapse-payload-brand">'
-        + '<div class="relapse-payload-kicker">PS5 RELAPSE / PAYLOAD CENTER</div>'
-        + '<h2>Payloads</h2>'
-        + '<div class="relapse-payload-byline">By Manohar Padul</div>'
-        + '<p>Select a payload to send it to the local ELF loader.</p>'
-        + '</div>'
-        + '<div class="relapse-loader-badge">'
-        + '<span class="relapse-loader-dot"></span>'
-        + '<span class="eyebrow" id="relapse-payload-status">'
-        + (window.__elfldrUp ? 'Loader online · port 9021' : 'Waiting for loader · port 9021')
-        + '</span>'
-        + '</div>';
-    // Use the same reliable bitmap rendering as the working payload cards.
-    const status = header.querySelector("#relapse-payload-status");
-    header.textContent = "";
+
     const heading = document.createElement("img");
     heading.className = "relapse-payload-heading";
     heading.alt = "PS5 Relapse — Payloads — By Manohar Padul. Select a payload to send it to the local ELF loader.";
     heading.width = 1252;
     heading.height = 144;
     heading.src = new URL("ui/hdr-payload-center.png", location.href).href;
+    heading.addEventListener("load", () => { void heading.offsetHeight; }, { once: true });
     header.appendChild(heading);
-    if (status) {
-        status.setAttribute("role", "status");
-        status.setAttribute("aria-live", "polite");
-        header.appendChild(status);
-    }
+
+    const status = document.createElement("span");
+    status.className = "eyebrow";
+    status.id = "relapse-payload-status";
+    status.setAttribute("role", "status");
+    status.setAttribute("aria-live", "polite");
+    status.textContent = "Preparing payload menu · port 9021";
+    header.appendChild(status);
+
     const wrap = document.createElement("div");
     wrap.className = "relapse-payload-grid";
     screen.appendChild(header);
@@ -871,29 +890,33 @@ function buildPayloadMenu() {
     // All cards share one native sender; never run two sends concurrently.
     let sendingPayload = false;
     for (const t of tiles) {
-        // Use a native button here. PS5 WebKit paints and controller-focuses
-        // native controls reliably; the old role=button divs only repainted
-        // after the pointer moved over them.
         const a = document.createElement("button");
         a.type = "button";
         a.className = "relapse-payload-tile";
+        a.setAttribute("aria-label", t.title);
+
         const title = document.createElement("span");
         title.className = "relapse-payload-title";
         title.textContent = t.title;
+
         const description = document.createElement("span");
         description.className = "relapse-payload-description";
         description.textContent = t.description;
+
         const info = document.createElement("span");
         info.className = "relapse-payload-info";
         info.textContent = t.name + " · port 9021";
-        a.setAttribute("aria-label", t.title);
+
         const art = document.createElement("img");
         art.className = "relapse-payload-art";
         art.alt = t.title;
         art.width = 626;
         art.height = 104;
-        // Absolute URLs remain correct inside the about:blank menu frame.
         art.src = new URL("ui/btn-" + t.key + "-default.png", location.href).href;
+        art.addEventListener("load", () => {
+            // Force the decoded bitmap into a painted layout box before exploit.
+            void art.offsetHeight;
+        }, { once: true });
         art.onerror = () => {
             if (art.parentNode !== a) return;
             a.removeChild(art);
@@ -902,36 +925,37 @@ function buildPayloadMenu() {
             a.appendChild(info);
         };
         a.appendChild(art);
+
         a.addEventListener("click", async (e) => {
             e.preventDefault();
-            if (sendingPayload) return;
+            if (sendingPayload || typeof window.__sendPayload !== "function") return;
             sendingPayload = true;
             a.setAttribute("aria-busy", "true");
             a.classList.remove("sent", "failed");
             a.classList.add("busy");
             info.textContent = "Sending ELF to port 9021...";
-            header.querySelector("#relapse-payload-status").textContent = "Sending " + t.title + "...";
+            status.textContent = "Sending " + t.title + "...";
             print(t.title + ": sending ...", "LOG-INFO");
             try {
                 const n = await window.__sendPayload(t.name);
                 a.classList.remove("busy");
                 a.classList.add("sent");
                 info.textContent = "Sent " + n + " bytes · port 9021";
-                header.querySelector("#relapse-payload-status").textContent =
+                status.textContent =
                     t.key.indexOf("pldmgr") === 0 || t.key === "plk"
                         ? "PLK Manager sent · open PS5-IP:8084"
                         : t.title + " sent to port 9021";
                 print(t.title + ": sent " + n + " bytes to 127.0.0.1:9021", "LOG-SUCCESS");
+
                 if (t.key === "game-compressor") {
                     const ip = String(window.__ps5Ip || "127.0.0.1");
                     if (/^[0-9.]+$/.test(ip)) {
-                        header.querySelector("#relapse-payload-status").textContent =
-                            "Game Compressor sent · dashboard may take a moment to start. ";
+                        status.textContent = "Game Compressor sent · dashboard may take a moment to start. ";
                         const dashboard = document.createElement("a");
                         dashboard.href = "http://" + ip + ":5910/";
                         dashboard.textContent = "Open Game Compressor";
                         dashboard.style.color = "#8df0ad";
-                        header.querySelector("#relapse-payload-status").appendChild(dashboard);
+                        status.appendChild(dashboard);
                     }
                 }
             } catch (err) {
@@ -939,60 +963,62 @@ function buildPayloadMenu() {
                 a.classList.add("failed");
                 const message = String((err && err.message) || err);
                 info.textContent = "Failed: " + message;
-                header.querySelector("#relapse-payload-status").textContent = t.title + " failed";
+                status.textContent = t.title + " failed";
                 print(t.title + ": " + message, "LOG-ERROR");
             } finally {
                 sendingPayload = false;
                 a.removeAttribute("aria-busy");
             }
         });
+
         wrap.appendChild(a);
     }
-    // Apply the final view state before inserting the screen. Do not insert a
-    // hidden subtree: PS5 WebKit can leave its text unpainted until a hover
-    // or focus event.
-    document.body.classList.add("payload-mode", "payload-only-mode");
-    // Match the working Relapse website: put the payload screen in a fresh
-    // rendering document after the exploit completes.  PS5 WebKit can retain
-    // the exploit console's compositor layer and leave newly-created cards
-    // visually blank until hover.  The iframe gives the cards an independent
-    // paint tree, while this parent document remains alive and continues to
-    // own the exploit primitive and __sendPayload function.
-    const frame = document.createElement("iframe");
-    frame.id = "relapse-payload-frame";
-    frame.title = "Relapse payload menu";
-    frame.setAttribute("scrolling", "no");
-    frame.style.cssText = "display:block;width:100%;height:100vh;border:0;background:#000";
-    document.body.appendChild(frame);
-    const menuDocument = frame.contentDocument;
-    menuDocument.open();
-    menuDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>PS5 Relapse Payloads</title></head><body class="payload-mode payload-only-mode"></body></html>');
-    menuDocument.close();
-    const menuStyle = menuDocument.createElement("style");
-    menuStyle.textContent = document.querySelector("style").textContent;
-    menuDocument.head.appendChild(menuStyle);
-    menuDocument.body.appendChild(screen);
-    document.getElementById("console").scrollTop = 0;
-    window.scrollTo(0, 0);
+
+    // Put the fully-built menu in the real document now, while WebKit is still
+    // in its normal pre-exploit rendering state. It remains painted off-screen.
+    document.body.appendChild(screen);
+
+    // Synchronously request layout for the whole subtree and each image/card.
+    // This mirrors the repaint that hover was previously forcing, but it happens
+    // before the jailbreak rather than after it.
     void screen.offsetHeight;
     void wrap.offsetHeight;
-    void document.getElementById("console").offsetHeight;
-    void screen.offsetHeight;
+    for (const tile of wrap.children) void tile.offsetHeight;
+
+    preparedPayloadUI = { screen, header, status, wrap };
+    print("payload menu prebuilt off-screen", "LOG-DEBUG");
+    return preparedPayloadUI;
+}
+
+function showPayloadMenu() {
+    const ui = preparePayloadMenu();
+    if (!ui) return;
+
+    ui.status.textContent = window.__elfldrUp
+        ? "Loader online · port 9021"
+        : "Waiting for loader · port 9021";
+
+    // Switch view state first, then bring the already-painted subtree back from
+    // off-screen. No iframe is created and no payload cards are rebuilt here.
+    document.body.classList.add("payload-mode", "payload-only-mode");
+    ui.screen.classList.remove("relapse-prebuilt");
+
+    window.scrollTo(0, 0);
+    void ui.screen.offsetHeight;
+    void ui.wrap.offsetHeight;
+
+    // One zero-delay style/layout pass catches WebKit builds that delay the
+    // off-screen -> on-screen commit by one event-loop turn.
     setTimeout(() => {
-        void screen.offsetHeight;
-        const first = wrap.firstElementChild;
-        const firstTitle = first && first.querySelector(".relapse-payload-title");
-        if (firstTitle) {
-            const style = getComputedStyle(firstTitle);
-            print("payload view visible: title display=" + style.display
-                + " visibility=" + style.visibility
-                + " color=" + style.color, "LOG-DEBUG");
-        }
+        for (const tile of ui.wrap.children) void tile.offsetHeight;
+        window.scrollTo(0, 0);
     }, 0);
-    // Do not focus the first tile: EtaHEN is first in the list and would look
-    // permanently selected whenever the menu is opened.
+
     print("elfldr is up - pick a payload", "LOG-SUCCESS");
 }
+
+// Build/paint the menu before run() reaches the WebKit exploit.
+preparePayloadMenu();
 
 run().catch(reportFailure);
 </script>

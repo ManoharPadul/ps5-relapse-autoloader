@@ -5,8 +5,11 @@
 - Changed the native installer/cache version from `0.1.0` to `0.2.0`.
 - Every native build now creates a new versioned AppCache directory and
   completeness marker, so the pointer page can reject an older cached bundle.
-- Matched the ELF payload screen to the working Relapse website: a fresh iframe
-  rendering document and the PS5-compatible block/float card layout.
+- Matched the ELF payload card layout to the working Relapse website's
+  PS5-compatible block/float rendering.
+- Prebuilt and painted the payload screen before the jailbreak, then reveals the
+  same DOM afterward instead of constructing cards during the post-exploit
+  compositor transition.
 - Removed the native CSS Grid override and eager image flags that could leave
   payload cards blank until the cursor moved over them.
 - Kept the exploit document and console-side ELF sender alive behind the payload
