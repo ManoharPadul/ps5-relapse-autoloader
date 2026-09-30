@@ -163,7 +163,7 @@
       visibility: visible !important;
   }
   body.payload-only-mode #console { padding: 0; overflow: hidden; }
-  body.payload-only-mode #relapse-boot-options { display: block; }
+  body.payload-only-mode #relapse-boot-options { display: none !important; }
   body.payload-only-mode .relapse-payload-screen {
       min-height: 100vh;
       margin-top: 0;
@@ -333,16 +333,11 @@
       .relapse-payload-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .relapse-payload-grid { grid-template-columns: 1fr; }
   }
-  /* Keep payloads in normal document flow on the console browser. */
+  /* Once the payload screen is a body sibling, remove the exploited log layer
+     completely. Keeping the old console 100000px offscreen leaves a stale
+     paint/compositing layer on PS5 WebKit and can stop the new cards painting. */
   body.payload-mode #console {
-      position: absolute;
-      left: -100000px;
-      top: 0;
-      width: 1px;
-      height: 1px;
-      min-height: 0;
-      overflow: hidden;
-      pointer-events: none;
+      display: none !important;
   }
   body.payload-only-mode .relapse-payload-screen {
       display: grid;
@@ -432,14 +427,11 @@
   }
   .relapse-payload-tile::before { content: none; }
 
-  /* PS5 WebKit first-frame repaint guard. This class is toggled for one frame
-     after the payload menu is inserted; it changes no visible styling. */
-  .relapse-payload-screen.relapse-force-paint,
-  .relapse-payload-screen.relapse-force-paint .relapse-payload-grid,
-  .relapse-payload-screen.relapse-force-paint .relapse-payload-tile,
-  .relapse-payload-screen.relapse-force-paint .relapse-payload-art {
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
+  /* A real style change is applied after insertion because PS5 WebKit may
+     postpone the first paint of DOM created immediately after the exploit. */
+  .relapse-payload-tile.relapse-repaint-pass {
+      outline: 1px solid rgba(255,255,255,.001) !important;
+      background: #212226 !important;
   }
 </style>
 </head>
@@ -971,17 +963,30 @@ function buildPayloadMenu() {
     if (bootOptions) document.body.insertBefore(screen, bootOptions);
     else document.body.appendChild(screen);
 
-    // Force PS5 WebKit to commit layout + paint immediately. Reading layout
-    // alone is sometimes insufficient after the exploit; briefly toggling a
-    // harmless class invalidates the full payload subtree without focusing a
-    // card (so the first card does not look selected).
-    void screen.offsetWidth;
-    screen.classList.add("relapse-force-paint");
-    void screen.offsetHeight;
-    requestAnimationFrame(() => {
-        screen.classList.remove("relapse-force-paint");
-        void screen.offsetHeight;
-    });
+    // PS5 WebKit can leave newly-created card layers unpainted after the
+    // exploit. Hover used to fix one card because :hover caused a real style
+    // invalidation. Reproduce that invalidation for every card without moving
+    // the pointer or leaving controller focus on a tile. Use timers instead of
+    // requestAnimationFrame because rAF can be unreliable immediately after
+    // the jailbreak handoff.
+    void document.body.offsetHeight;
+    const paintTiles = Array.from(wrap.children);
+    let paintIndex = 0;
+    const repaintNextTile = () => {
+        if (paintIndex >= paintTiles.length) {
+            window.scrollTo(0, 0);
+            return;
+        }
+        const tile = paintTiles[paintIndex++];
+        tile.classList.add("relapse-repaint-pass");
+        void tile.offsetHeight;
+        setTimeout(() => {
+            tile.classList.remove("relapse-repaint-pass");
+            void tile.offsetHeight;
+            setTimeout(repaintNextTile, 0);
+        }, 0);
+    };
+    setTimeout(repaintNextTile, 0);
     document.getElementById("console").scrollTop = 0;
     window.scrollTo(0, 0);
     void screen.offsetHeight;
