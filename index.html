@@ -804,7 +804,7 @@ async function run() {
 
 /** Plain DOM cards keep text stable on PS5 WebKit and remain controller-focusable. */
 function buildPayloadMenu() {
-    if (document.getElementById("relapse-payload-frame")) return;
+    if (document.getElementById("relapse-payload-screen")) return;
     const tiles = (window.PAYLOAD_TILES || []).slice();
     const fallbackTiles = [
         { title: "PLK Manager v0.5.2 (13.60)", description: "Rebuilt with latest SDK. Open PS5-IP:8084.", name: "pldmgr_v0.5.2.elf", key: "pldmgr-v052", art: false },
@@ -943,21 +943,29 @@ function buildPayloadMenu() {
     // Keep the menu outside the scrolling log and its visibility rules.
     // A fresh rendering document avoids reusing the exploited page's paint
     // layers. The original document and its sender remain alive throughout.
-    const frame = document.createElement("iframe");
-    frame.id = "relapse-payload-frame";
-    frame.title = "Relapse payload menu";
-    frame.style.cssText = "display:block;width:100%;height:100vh;border:0;background:#0c0c0f";
-    // Put the payload menu first after success. Boot settings remain available
-    // below it, without consuming the menu's initial viewport.
-    document.body.insertBefore(frame, document.getElementById("relapse-boot-options"));
-    const menuDocument = frame.contentDocument;
-    menuDocument.open();
-    menuDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Relapse Payloads</title></head><body class="payload-mode payload-only-mode"></body></html>');
-    menuDocument.close();
-    const menuStyle = menuDocument.createElement("style");
-    menuStyle.textContent = document.querySelector("style").textContent;
-    menuDocument.head.appendChild(menuStyle);
-    menuDocument.body.appendChild(screen);
+    const isNativeApp = window.__RELAPSE_NATIVE_APP === true
+        || (location.hostname === "127.0.0.1" && location.port === "18181");
+    let menuDocument = document;
+    if (isNativeApp) {
+        // Keep native payload cards in the exploited document. Moving a live
+        // subtree into an about:blank iframe makes PS5 WebKit defer its first
+        // paint until pointer hover; direct insertion avoids that repaint bug.
+        document.body.insertBefore(screen, document.getElementById("relapse-boot-options"));
+    } else {
+        const frame = document.createElement("iframe");
+        frame.id = "relapse-payload-frame";
+        frame.title = "Relapse payload menu";
+        frame.style.cssText = "display:block;width:100%;height:100vh;border:0;background:#0c0c0f";
+        document.body.appendChild(frame);
+        menuDocument = frame.contentDocument;
+        menuDocument.open();
+        menuDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Relapse Payloads</title></head><body class="payload-mode payload-only-mode"></body></html>');
+        menuDocument.close();
+        const menuStyle = menuDocument.createElement("style");
+        menuStyle.textContent = document.querySelector("style").textContent;
+        menuDocument.head.appendChild(menuStyle);
+        menuDocument.body.appendChild(screen);
+    }
     document.getElementById("console").scrollTop = 0;
     window.scrollTo(0, 0);
     void screen.offsetHeight;
