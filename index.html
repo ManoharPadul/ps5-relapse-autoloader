@@ -431,6 +431,16 @@
       box-shadow: none;
   }
   .relapse-payload-tile::before { content: none; }
+
+  /* PS5 WebKit first-frame repaint guard. This class is toggled for one frame
+     after the payload menu is inserted; it changes no visible styling. */
+  .relapse-payload-screen.relapse-force-paint,
+  .relapse-payload-screen.relapse-force-paint .relapse-payload-grid,
+  .relapse-payload-screen.relapse-force-paint .relapse-payload-tile,
+  .relapse-payload-screen.relapse-force-paint .relapse-payload-art {
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+  }
 </style>
 </head>
 <body>
@@ -952,32 +962,26 @@ function buildPayloadMenu() {
     // hidden subtree: PS5 WebKit can leave its text unpainted until a hover
     // or focus event.
     document.body.classList.add("payload-mode", "payload-only-mode");
-    // Keep the menu outside the scrolling log and its visibility rules.
-    // A fresh rendering document avoids reusing the exploited page's paint
-    // layers. The original document and its sender remain alive throughout.
-    const isNativeApp = window.__RELAPSE_NATIVE_APP === true
-        || (location.hostname === "127.0.0.1" && location.port === "18181");
-    let menuDocument = document;
-    if (isNativeApp) {
-        // Keep native payload cards in the exploited document. Moving a live
-        // subtree into an about:blank iframe makes PS5 WebKit defer its first
-        // paint until pointer hover; direct insertion avoids that repaint bug.
-        document.body.insertBefore(screen, document.getElementById("relapse-boot-options"));
-    } else {
-        const frame = document.createElement("iframe");
-        frame.id = "relapse-payload-frame";
-        frame.title = "Relapse payload menu";
-        frame.style.cssText = "display:block;width:100%;height:100vh;border:0;background:#0c0c0f";
-        document.body.appendChild(frame);
-        menuDocument = frame.contentDocument;
-        menuDocument.open();
-        menuDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Relapse Payloads</title></head><body class="payload-mode payload-only-mode"></body></html>');
-        menuDocument.close();
-        const menuStyle = menuDocument.createElement("style");
-        menuStyle.textContent = document.querySelector("style").textContent;
-        menuDocument.head.appendChild(menuStyle);
-        menuDocument.body.appendChild(screen);
-    }
+    // Keep the payload menu in THIS document on every launch path.
+    // PS5 WebKit can create the DOM inside an about:blank iframe but defer the
+    // first paint until pointer/controller hover. Keeping the cards in the
+    // exploited document avoids that stale-layer/repaint bug and also preserves
+    // direct access to the exploit-side payload sender.
+    const bootOptions = document.getElementById("relapse-boot-options");
+    if (bootOptions) document.body.insertBefore(screen, bootOptions);
+    else document.body.appendChild(screen);
+
+    // Force PS5 WebKit to commit layout + paint immediately. Reading layout
+    // alone is sometimes insufficient after the exploit; briefly toggling a
+    // harmless class invalidates the full payload subtree without focusing a
+    // card (so the first card does not look selected).
+    void screen.offsetWidth;
+    screen.classList.add("relapse-force-paint");
+    void screen.offsetHeight;
+    requestAnimationFrame(() => {
+        screen.classList.remove("relapse-force-paint");
+        void screen.offsetHeight;
+    });
     document.getElementById("console").scrollTop = 0;
     window.scrollTo(0, 0);
     void screen.offsetHeight;
