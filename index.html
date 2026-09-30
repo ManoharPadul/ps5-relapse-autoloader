@@ -290,7 +290,7 @@
   .relapse-payload-tile { position: relative; }
   .relapse-payload-tile:focus::before,
   .relapse-payload-tile:hover::before { background: var(--relapse-green); }
-  .relapse-payload-tile.busy { opacity: .5; pointer-events: none; }
+  .relapse-payload-tile.busy { opacity: 1; outline: 3px solid #ffd27d; }
   .relapse-payload-tile.sent { border: 2px solid #47c76a; }
   .relapse-payload-tile.failed { border: 2px solid #e74856; }
   .relapse-payload-title {
@@ -647,17 +647,17 @@ async function ensureOfflineCache() {
     }
 
     setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");
-    let registration = await navigator.serviceWorker.register("./sw.js?v=31", { scope: "./" });
+    let registration = await navigator.serviceWorker.register("./sw.js?v=32", { scope: "./" });
     try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
 
     let worker = null;
     for (let attempt = 0; attempt < 40; attempt++) {
         registration = await navigator.serviceWorker.ready;
         worker = registration.active;
-        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=31") !== -1) break;
+        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=32") !== -1) break;
         await sleep(250);
     }
-    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=31") === -1) {
+    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=32") === -1) {
         throw new Error("offline cache worker did not activate");
     }
 
@@ -840,6 +840,8 @@ function buildPayloadMenu() {
     screen.appendChild(header);
     screen.appendChild(wrap);
 
+    // All cards share one native sender; never run two sends concurrently.
+    let sendingPayload = false;
     for (const t of tiles) {
         const a = document.createElement("div");
         a.setAttribute("role", "button");
@@ -873,6 +875,9 @@ function buildPayloadMenu() {
         a.appendChild(art);
         a.addEventListener("click", async (e) => {
             e.preventDefault();
+            if (sendingPayload) return;
+            sendingPayload = true;
+            a.setAttribute("aria-busy", "true");
             a.classList.remove("sent", "failed");
             a.classList.add("busy");
             info.textContent = "Sending ELF to port 9021...";
@@ -892,9 +897,12 @@ function buildPayloadMenu() {
                     const ip = String(window.__ps5Ip || "127.0.0.1");
                     if (/^[0-9.]+$/.test(ip)) {
                         header.querySelector("#relapse-payload-status").textContent =
-                            "Game Compressor sent · opening local port 5910";
-                        await sleep(1000);
-                        location.href = "http://" + ip + ":5910/";
+                            "Game Compressor sent · dashboard may take a moment to start. ";
+                        const dashboard = document.createElement("a");
+                        dashboard.href = "http://" + ip + ":5910/";
+                        dashboard.textContent = "Open Game Compressor";
+                        dashboard.style.color = "#8df0ad";
+                        header.querySelector("#relapse-payload-status").appendChild(dashboard);
                     }
                 }
             } catch (err) {
@@ -904,6 +912,9 @@ function buildPayloadMenu() {
                 info.textContent = "Failed: " + message;
                 header.querySelector("#relapse-payload-status").textContent = t.title + " failed";
                 print(t.title + ": " + message, "LOG-ERROR");
+            } finally {
+                sendingPayload = false;
+                a.removeAttribute("aria-busy");
             }
         });
         a.addEventListener("keydown", (e) => {
