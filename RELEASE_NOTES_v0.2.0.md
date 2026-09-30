@@ -29,5 +29,7 @@ console. Start the supported jailbreak chain and `elfldr` on port `9021`, then
 send the installer ELF. Reinstalling this version stages the new cache bundle;
 the target PS5 still needs Wi-Fi or Ethernet/LAN for the local console services.
 
-The build must be tested on the target PS5 before treating the release as fully
-verified.
+Internet access is not needed after caching, but Wi-Fi or Ethernet/LAN must still
+provide a real local IPv4 address. Loopback-only networking cannot satisfy the
+13.60 route-based KASLR step. The build must be tested on the target PS5 before
+treating the release as fully verified.

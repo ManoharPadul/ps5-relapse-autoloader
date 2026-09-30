@@ -70,12 +70,15 @@ services.
 | Connection | Needed for |
 |---|---|
 | Internet/WAN | First cache setup and online downloads |
-| Wi-Fi or Ethernet/LAN | Local PS5 networking and normal jailbreak sessions |
+| Wi-Fi or Ethernet/LAN with a local IP address | Local PS5 networking and normal jailbreak sessions |
 | Internet after caching | Not required |
 
-Completely disabling Wi-Fi and disconnecting LAN may cause `kaslr: no configured
-interface` or routing failures on some 13.60 runs. If PS5 browser data is cleared,
-the cache must be prepared again while online.
+Internet after caching is not required, but the PS5 must still be associated with a
+router or hotspot and receive a local IPv4 address such as `192.168.x.x`. The
+exploit uses the PS5 route table for its 13.60 KASLR step; `127.0.0.1` loopback is
+not sufficient. If the network test reports no IP address, use a DHCP-enabled
+router/hotspot or Ethernet connection, even if that network has no WAN internet.
+If PS5 browser data is cleared, the cache must be prepared again while online.
 
 ## Payloads
 

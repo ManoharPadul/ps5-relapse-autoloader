@@ -884,12 +884,14 @@ async function main(userlandRW, wkOnly = false) {
   }
 
   let ip_list = await get_local_ips();
-  let ip = ip_list.find((obj) => obj.ip != "0.0.0.0");
+  let ip = ip_list.find(
+    (obj) => obj.ip != "0.0.0.0" && obj.ip != "127.0.0.1",
+  );
   if (typeof ip === "undefined" || !ip.ip) {
-    // A disconnected console still has a loopback interface.  The exploit
-    // can use it for the local route lookup, and pldmgr can be opened through
-    // localhost after it binds its HTTP server; no internet access is needed.
-    ip = { ip: "127.0.0.1", name: "Offline (loopback)" };
+    // Loopback is not a usable address for the route-based KASLR leak or for
+    // opening services from another device. Internet access is optional, but
+    // the PS5 must have a real Wi-Fi/LAN address from DHCP.
+    ip = { ip: "", name: "Offline (no Wi-Fi/LAN address)" };
   }
   // The page-level autoloader uses the console address after it sends pldmgr.
   // Keep this value informational only; payload delivery still goes through
