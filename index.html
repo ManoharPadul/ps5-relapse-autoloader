@@ -857,10 +857,11 @@ function buildPayloadMenu() {
     // All cards share one native sender; never run two sends concurrently.
     let sendingPayload = false;
     for (const t of tiles) {
-        const a = document.createElement("div");
-        a.setAttribute("role", "button");
-        a.setAttribute("tabindex", "0");
-        a.setAttribute("aria-label", t.title);
+        // Use a native button here. PS5 WebKit paints and controller-focuses
+        // native controls reliably; the old role=button divs only repainted
+        // after the pointer moved over them.
+        const a = document.createElement("button");
+        a.type = "button";
         a.className = "relapse-payload-tile";
         const title = document.createElement("span");
         title.className = "relapse-payload-title";
@@ -877,6 +878,8 @@ function buildPayloadMenu() {
         art.alt = t.title;
         art.width = 626;
         art.height = 104;
+        art.loading = "eager";
+        art.decoding = "sync";
         // Absolute URLs remain correct inside the about:blank menu frame.
         art.src = new URL("ui/btn-" + t.key + "-default.png", location.href).href;
         art.onerror = () => {
@@ -930,11 +933,6 @@ function buildPayloadMenu() {
                 sendingPayload = false;
                 a.removeAttribute("aria-busy");
             }
-        });
-        a.addEventListener("keydown", (e) => {
-            if (e.key !== "Enter" && e.key !== " ") return;
-            e.preventDefault();
-            a.click();
         });
         wrap.appendChild(a);
     }
