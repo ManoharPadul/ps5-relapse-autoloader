@@ -177,12 +177,28 @@ Screenshots are intentionally left as placeholders above. Add them later under
 - `.github/workflows/native-installer.yml` builds the native installer with the
   official PS5 SDK container definition.
 
+## Upstream projects and payload sources
+
+This project is a Relapse-based integration and uses or references the following
+open-source projects. Each upstream project retains its own license and credits.
+
+| Project | Role in this project |
+|---|---|
+| [soniciso1/relapse](https://github.com/soniciso1/relapse) | Original Relapse PS5 WebKit/kernel exploit frontend and firmware-chain lineage |
+| [itsPLK/ps5-webkit-autoloader](https://github.com/itsPLK/ps5-webkit-autoloader) | Native ELF installer, cache staging, homescreen installation, and build architecture |
+| [itsPLK/ps5-payload-manager](https://github.com/itsPLK/ps5-payload-manager) | PLK Manager dashboard/payload source and port-8084 service workflow |
+| [EchoStretch/kstuff-lite](https://github.com/EchoStretch/kstuff-lite) | `ps5-kstuff` payload source |
+| [juma-sayeh/PS5-Game-Compressor](https://github.com/juma-sayeh/PS5-Game-Compressor) | Game Compressor payload source and service workflow |
+| [etaHEN/etaHEN](https://github.com/etaHEN/etaHEN) | etaHEN AIO payload source |
+
+The Relapse-specific additions include the offline-first cache flow, 13.60
+frontend integration, local Wi-Fi/LAN interface handling, payload menu, optional
+PLK Manager autoload, native installer branding, and payload packaging.
+
 ## Credits
 
-Relapse builds on the PS5 WebKit/kernel exploit work, PS5 payload SDK, elfldr,
-payload projects, and the open-source native installer architecture referenced in
-the project sources. See the individual source files and linked upstream projects
-for their respective licenses and contributors.
+Thanks to all upstream developers and contributors. See the linked repositories
+for their individual licenses, attribution requirements, and original source.
 
 ## Disclaimer
 
