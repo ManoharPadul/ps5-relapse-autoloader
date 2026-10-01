@@ -5,11 +5,11 @@
 <h1 align="center">PS5 Relapse Autoloader</h1>
 
 <p align="center">
-  Offline-first WebKit and kernel-jailbreak frontend with an in-page ELF payload menu.<br />
+  Native offline AutoLoader with automatic payload loading, by Manohar Padul.<br />
   Supports Relapse firmware <b>7.00–13.60</b>.
 </p>
 
-Relapse AutoLoader v0.2.0 installs a cached Relapse application on the PS5. The
+Relapse AutoLoader v0.3.0 installs a cached Relapse application on the PS5. The
 native installer is an installation and cache tool; it does **not** jailbreak a
 clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` running.
 
@@ -21,7 +21,12 @@ clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` runnin
 </p>
 -->
 
-## What it does
+For the current native ELF behavior and installation instructions, see
+[v0.3.0 release notes](RELEASE_NOTES_v0.3.0.md) and [native build documentation](native/README.md).
+The browser-hosted frontend described below is retained separately; its legacy
+timers and menu implementation are not used by the v0.3.0 native build.
+
+## Browser-hosted frontend
 
 PS5 browser exploit pages normally depend on a remote host or DNS service. Relapse
 stages its complete browser bundle locally first: the page verifies the scripts,
@@ -134,15 +139,22 @@ not available in those firmware images.
 
 ## Native offline installer
 
-The separate native-ELF phase is documented in [`native/`](native/). It reuses the
-upstream installer/build machinery while replacing the staged application with
-the 13.60 Relapse frontend and payload bundle. The build also embeds the supplied
-portrait as the PS5 homescreen icon.
+The v0.3.0 native build is documented in [`native/`](native/). It uses the
+**itsPLK/ps5-webkit-autoloader v0.5.2** installer and automatic payload interface,
+branded **PS5 Relapse AutoLoader — by Manohar Padul**, with the supplied circular
+portrait. The installer and progress UI follow upstream. After a successful
+Relapse jailbreak, **Autoload Payload Manager OFF** shows the Relapse payload
+menu; **ON** immediately loads the bundled Payload Manager. The choice persists
+across launches. There is no added startup or autoload delay in this ELF.
 
-The v0.2.0 installer is named:
+The Relapse menu is rendered in the outer UI document while its exploit iframe
+stays alive to send payloads. Other upstream exploit routes keep their unified
+autoload behavior. Configure subsequent autoloads through Payload Manager.
+
+The v0.3.0 installer is named:
 
 ```text
-ps5-relapse-autoloader-installer.0.2.0.elf
+ps5-relapse-autoloader-installer.0.3.0.elf
 ```
 
 Installation flow:
@@ -151,17 +163,17 @@ Installation flow:
 2. Send the installer ELF through the existing payload menu.
 3. Let the temporary local installer server stage the cache and create the
    homescreen application.
-4. Launch **PS5 Relapse AutoLoader** from the PS5 Media section.
+4. Reboot once, then launch **PS5 Relapse AutoLoader** from the PS5 Media section.
 
 The complete release text is in
-[`RELEASE_NOTES_v0.2.0.md`](RELEASE_NOTES_v0.2.0.md). The native ELF must be tested
+[`RELEASE_NOTES_v0.3.0.md`](RELEASE_NOTES_v0.3.0.md). The native ELF must be tested
 on the target PS5 before release; a successful compiler build does not guarantee
 that every payload or firmware configuration will work.
 
-The official upstream autoloader README documents a different firmware range,
-ending at 12.70; its native installer is therefore treated here as generic cache
-and homescreen-installation machinery, not as the 13.60 exploit chain. The native
-ELF must be built and then tested on the target 13.60 console before release.
+Upstream v0.5.2 includes firmware routing through 13.60. On 13.60 a usable local
+Wi-Fi/Ethernet IP is required, even with the full offline cache. Each development
+build uses a fresh timestamped content/cache version. Install the new ELF and
+allow caching to finish before testing the new interface.
 
 ## Screenshots
 

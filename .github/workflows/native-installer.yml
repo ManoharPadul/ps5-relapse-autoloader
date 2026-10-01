@@ -13,10 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      UPSTREAM_REF: v0.4.0
+      UPSTREAM_REF: v0.5.2
     steps:
       - name: Check out Relapse
         uses: actions/checkout@v4
+
+      - name: Verify payload UI behavior
+        run: node native/test-payload-ui.cjs
 
       - name: Fetch upstream native installer sources
         shell: bash
@@ -25,33 +28,17 @@ jobs:
           git clone --depth 1 --branch "${UPSTREAM_REF}" \
             https://github.com/itsPLK/ps5-webkit-autoloader.git .native-upstream
           git -C .native-upstream submodule update --init --recursive
-          # v0.4.0's bundled Slopkit patch was generated from this commit;
-          # the tag currently points its submodule at a newer incompatible
-          # revision.
-          git -C .native-upstream/third_party/slopkit fetch --depth 1 origin \
-            1c8df66a28b5a151c152cdf4aa320380e7d0b274
-          git -C .native-upstream/third_party/slopkit checkout --detach \
-            1c8df66a28b5a151c152cdf4aa320380e7d0b274
 
-      - name: Overlay the 13.60 Relapse frontend and payloads
+      - name: Brand the upstream automatic payload interface
         shell: bash
         run: |
           set -euo pipefail
-          # Keep the upstream slopkit/umtx2 trees because the upstream registry
-          # generator adds their AppCache entries. Relapse's index.html and
-          # relative assets replace the upstream app entry and remain the only
-          # exploit UI launched by this build.
-          rsync -a \
-            --exclude '.git/' \
-            --exclude '.github/' \
-            --exclude '.native-upstream/' \
-            --exclude 'native/' \
-            --exclude 'README.md' \
-            --exclude '*.sha256' \
-            ./ .native-upstream/frontend/autoloader/
+          # Keep the complete upstream frontend and unified autoloader.
+          # Add the optional menu in the outer UI; preserve upstream exploit code.
           cp assets/icon.png .native-upstream/assets/relapse-icon.png
           python3 native/embed-icon.py .native-upstream
           python3 native/brand-upstream.py .native-upstream
+          python3 native/configure-flow.py .native-upstream
 
       - name: Build the official PS5 SDK container
         run: docker build -t ps5-relapse-autoloader-sdk \
@@ -66,13 +53,13 @@ jobs:
             -v "$PWD/.native-upstream:/src" \
             -w /src \
             ps5-relapse-autoloader-sdk make clean all
-          cp .native-upstream/installer.elf ps5-relapse-autoloader-installer.0.2.0.elf
-          sha256sum ps5-relapse-autoloader-installer.0.2.0.elf > ps5-relapse-autoloader-installer.0.2.0.elf.sha256
+          cp .native-upstream/installer.elf ps5-relapse-autoloader-installer.0.3.0.elf
+          sha256sum ps5-relapse-autoloader-installer.0.3.0.elf > ps5-relapse-autoloader-installer.0.3.0.elf.sha256
 
       - name: Upload native installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: ps5-relapse-autoloader-installer-13.60
           path: |
-            ps5-relapse-autoloader-installer.0.2.0.elf
-            ps5-relapse-autoloader-installer.0.2.0.elf.sha256
+            ps5-relapse-autoloader-installer.0.3.0.elf
+            ps5-relapse-autoloader-installer.0.3.0.elf.sha256

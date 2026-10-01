@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import re
 import sys
 
 
@@ -17,6 +18,8 @@ def main() -> int:
         root / "frontend" / "installer-page" / "index.html",
         root / "frontend" / "pointer" / "index.html",
         root / "frontend" / "autoloader" / "index.html",
+        root / "frontend" / "autoloader" / "app.js",
+        root / "frontend" / "autoloader" / "style.css",
         root / "assets" / "param.json.template",
         root / "include" / "wkali.h",
         root / "Makefile",
@@ -26,25 +29,16 @@ def main() -> int:
         *sorted((root / "src").glob("*.h")),
     ]
     replacements = (
-        ("WebKit Autoloader Installer", "PS5 Relapse Installer"),
-        ("WebKit Autoloader App", "PS5 Relapse App"),
-        ("WebKit Autoloader", "PS5 Relapse"),
-        ("by PLK", "by ManoharPadul"),
+        ("WebKit Autoloader", "PS5 Relapse AutoLoader"),
+        ("PS5 Relapse AutoLoader by PLK", "PS5 Relapse AutoLoader by Manohar Padul"),
+        ("by PLK (built", "by Manohar Padul (built"),
         ("github.com/itsPLK/ps5-webkit-autoloader", "github.com/ManoharPadul/ps5-relapse-autoloader"),
-        ('#define WKAL_VERSION "0.4.0"', '#define WKAL_VERSION "0.2.0"'),
-        # Also allow rebuilding an already-staged local upstream tree without
-        # first recloning it from the upstream 0.4.0 tag.
-        ('#define WKAL_VERSION "0.1.0"', '#define WKAL_VERSION "0.2.0"'),
+        ("#0f172a", "#000000"),
+        ("#0b1220", "#000000"),
         (
             '@V=$$($(PYTHON) tools/gen_version.py --print); \\\n',
             '@V=$$(awk -F\'"\' \'/^#define WKAL_FULL_VERSION/{print $$2; exit}\' $(VERSION_HEADER)); \\\n'
             '\ttest -n "$$V"; \\\n',
-        ),
-        (
-            'if resolved.startswith("/") and "/slopkit/" in resolved:\n'
-            '                urls.add(resolved + query)',
-            'if resolved.startswith("/"):\n'
-            '                urls.add(resolved + query)',
         ),
         ('every generated asset gets a dark background and ~10% padding added.',
          'every generated asset gets a black background and ~10% padding added.'),
@@ -62,30 +56,12 @@ def main() -> int:
         updated = text
         for old, new in replacements:
             updated = updated.replace(old, new)
+        updated = re.sub(r'(#define\s+WKAL_VERSION\s+)"[^"]+"',
+                         r'\1"0.3.0"', updated)
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed += 1
 
-    # The native installer stops its temporary localhost server after the
-    # AppCache is complete.  Make the installed browser shortcut an explicit
-    # AppCache master entry so PS5 WebKit can reopen the cached exploit page
-    # after reboot, without changing the public GitHub Pages document.
-    marker = '<html lang="en" manifest="/cache.appcache">'
-    for relative in (
-        "frontend/pointer/index.html",
-        "frontend/autoloader/index.html",
-    ):
-        page = root / relative
-        if not page.is_file():
-            continue
-        text = page.read_text(encoding="utf-8")
-        if marker not in text:
-            updated = text.replace('<html lang="en">', marker, 1)
-            if updated == text:
-                print(f"warning: native {relative} <html> tag was not found", file=sys.stderr)
-            else:
-                page.write_text(updated, encoding="utf-8")
-                changed += 1
     print(f"Relapse branding applied to {changed} upstream files")
     return 0
 
