@@ -11,6 +11,10 @@ the Relapse payload page after a successful Relapse jailbreak.
 - Saved ON/OFF preference, one send at a time, and visible send errors.
 - New v0.3.0 versioned native cache bundle.
 - The exploit iframe remains alive; payload cards render in the outer UI.
+- Startup revision: payload card construction, card image requests and menu
+  stylesheet loading begin only after ELF loader readiness. The menu reports
+  elapsed jailbreak time for on-console comparisons. This removes extra startup
+  work; faster exploit completion has not been benchmarked on the PS5.
 
 ## Install
 

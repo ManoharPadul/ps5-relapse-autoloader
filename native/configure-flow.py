@@ -15,12 +15,17 @@ shutil.copytree(source / "payloads", app / "payloads", dirs_exist_ok=True)
 page = app / "index.html"
 text = page.read_text(encoding="utf-8")
 if 'src="payload-ui.js"' not in text:
-    text = text.replace('</head>', '<link rel="stylesheet" href="payload-ui.css" />\n</head>')
     text = text.replace('<script src="app.js"></script>',
                         '<script src="payloads.js"></script>\n'
                         '<script src="payload-ui.js"></script>\n'
                         '<script src="app.js"></script>')
-    page.write_text(text, encoding="utf-8")
+text = text.replace('<link rel="stylesheet" href="payload-ui.css" />\n', '')
+# Keep only the small toggle styled during exploitation. Load the card CSS and
+# image assets after readiness, without affecting upstream's progress layout.
+if 'id="relapse-toggle-style"' not in text:
+    toggle_css = (source / "native/payload-ui.css").read_text(encoding="utf-8").split('#relapse-menu {')[0]
+    text = text.replace('</head>', '<style id="relapse-toggle-style">' + toggle_css + '</style>\n</head>')
+page.write_text(text, encoding="utf-8")
 
 # Keep all kernel/exploit code upstream. Add only a post-success payload sender
 # bridge, in the generated frontend copy after upstream applies its own patch.
@@ -65,5 +70,12 @@ if "data.kind === 'menu-ready'" not in text:
         return;
       }
 """ + anchor)
+    js.write_text(text, encoding="utf-8")
+if 'window.__relapseChainStartedAt' not in text:
+    text = text.replace('    chainStarted = true;',
+                        '    window.__relapseChainStartedAt = Date.now();\n    chainStarted = true;')
+    text = text.replace("        updateProgress(100, 'Jailbreak complete. ELF loader ready.');",
+                        "        updateProgress(100, 'Jailbreak complete. ELF loader ready in ' + "
+                        "((Date.now() - window.__relapseChainStartedAt) / 1000).toFixed(1) + ' seconds.');")
     js.write_text(text, encoding="utf-8")
 print("Relapse menu/autoload choice staged; upstream progress UI retained")

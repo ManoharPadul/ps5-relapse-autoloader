@@ -12,14 +12,38 @@
   toggle.setAttribute('role', 'switch');
   options.appendChild(toggle);
   document.body.appendChild(options);
-  var menu = document.createElement('section');
+  var menu, status, cards;
+  function buildMenu() {
+  var sheet = document.createElement('link');
+  sheet.rel = 'stylesheet'; sheet.href = 'payload-ui.css';
+  document.head.appendChild(sheet);
+  menu = document.createElement('section');
   menu.id = 'relapse-menu';
   menu.innerHTML = '<p class="credit">PS5 RELAPSE / PAYLOAD CENTER</p><h1>Payloads</h1>' +
     '<p>By Manohar Padul</p><p>Select a payload to send it to the local ELF loader.</p>' +
+    '<p id="relapse-run-time"></p>' +
     '<p id="relapse-menu-status" role="status"></p><div id="relapse-cards"></div>';
   document.body.appendChild(menu);
-  var status = document.getElementById('relapse-menu-status');
-  var cards = document.getElementById('relapse-cards');
+  status = document.getElementById('relapse-menu-status');
+  cards = document.getElementById('relapse-cards');
+  tiles.forEach(function (tile) {
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.setAttribute('aria-label', tile.title + '. ' + tile.description);
+    var fallback = document.createElement('span');
+    fallback.className = 'fallback';
+    var title = document.createElement('strong'); title.textContent = tile.title;
+    var description = document.createElement('small'); description.textContent = tile.description;
+    fallback.appendChild(title); fallback.appendChild(description);
+    var art = document.createElement('img');
+    art.alt = tile.title;
+    art.onerror = function () { art.style.display = 'none'; fallback.style.display = 'block'; };
+    art.src = 'ui/btn-' + tile.key + '-default.png';
+    button.appendChild(art); button.appendChild(fallback);
+    button.onclick = function () { send(tile.name); };
+    cards.appendChild(button);
+  });
+  }
   function label() {
     toggle.textContent = 'Autoload Payload Manager: ' + (automatic ? 'ON' : 'OFF');
     toggle.setAttribute('aria-checked', automatic ? 'true' : 'false');
@@ -56,30 +80,16 @@
       else { showMenu(); report('ELF loader ready. Choose a payload.'); }
     }
   };
-  tiles.forEach(function (tile) {
-    var button = document.createElement('button');
-    button.type = 'button';
-    button.disabled = true;
-    button.setAttribute('aria-label', tile.title + '. ' + tile.description);
-    var fallback = document.createElement('span');
-    fallback.className = 'fallback';
-    var title = document.createElement('strong'); title.textContent = tile.title;
-    var description = document.createElement('small'); description.textContent = tile.description;
-    fallback.appendChild(title); fallback.appendChild(description);
-    var art = document.createElement('img');
-    art.alt = tile.title;
-    art.onerror = function () { art.style.display = 'none'; fallback.style.display = 'block'; };
-    art.src = 'ui/btn-' + tile.key + '-default.png';
-    button.appendChild(art); button.appendChild(fallback);
-    button.onclick = function () { send(tile.name); };
-    cards.appendChild(button);
-  });
   label();
   window.RelapsePayloadUI = {
     ready: function (sendPayload) {
       if (sender || typeof sendPayload !== 'function') return;
       sender = sendPayload;
-      for (var i = 0; i < cards.children.length; i++) cards.children[i].disabled = false;
+      buildMenu();
+      if (window.__relapseChainStartedAt) {
+        document.getElementById('relapse-run-time').textContent = 'Jailbreak completed in ' +
+          ((Date.now() - window.__relapseChainStartedAt) / 1000).toFixed(1) + ' seconds.';
+      }
       showMenu();
       if (automatic) send(manager);
       else { showMenu(); report('ELF loader ready. Choose a payload.'); }
