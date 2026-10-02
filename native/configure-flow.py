@@ -78,4 +78,11 @@ if 'window.__relapseChainStartedAt' not in text:
                         "        updateProgress(100, 'Jailbreak complete. ELF loader ready in ' + "
                         "((Date.now() - window.__relapseChainStartedAt) / 1000).toFixed(1) + ' seconds.');")
     js.write_text(text, encoding="utf-8")
-print("Relapse menu/autoload choice staged; upstream progress UI retained")
+shutil.copyfile(source / "native/stabilize-upstream.py", root / "tools/relapse_stability.py")
+text = make.read_text(encoding="utf-8")
+if 'tools/relapse_stability.py' not in text:
+    anchor = '\t$(PYTHON) tools/relapse_menu_bridge.py\n'
+    if text.count(anchor) != 1:
+        raise SystemExit("Missing Relapse menu build hook")
+    make.write_text(text.replace(anchor, anchor + '\t$(PYTHON) tools/relapse_stability.py\n'), encoding="utf-8")
+print("Relapse menu/autoload choice and stability safeguards staged")

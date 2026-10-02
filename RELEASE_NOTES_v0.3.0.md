@@ -31,7 +31,17 @@ A successful ELF send only confirms transfer, not service startup.
 
 The installer builds with the PS5 SDK. Console installation, jailbreak
 stability, rendering, and payload compatibility still require on-device testing.
-This build does not change the upstream kernel exploit implementation.
+This revision fixes false-success reporting when the kernel chain stops early,
+propagates terminal errors to the outer UI, and stops log polling on terminal
+Relapse failures. Embedded log updates use the existing batched poll instead of
+forcing hidden-document layout and posting a message for every line.
+
+WebKit retries stop after five safe attempts, or immediately when state cannot
+be safely released. Restart the console after a terminal failure; the app does
+not automatically reload an uncertain exploit document. The exploit iframe
+remains alive. Kernel race logic and firmware offsets are unchanged. These
+safeguards do not establish that console freezes or the underlying kernel
+failure are fixed; PS5 testing is still required.
 
 ## Credits
 
