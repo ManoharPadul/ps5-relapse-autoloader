@@ -12,9 +12,9 @@ the Relapse payload page after a successful Relapse jailbreak.
 - New v0.3.0 versioned native cache bundle.
 - Visible version is `0.3.0`, without a development suffix. The cache manifest
   still changes with the build timestamp; reinstall this ELF to update it.
-- Reopening with an ELF loader already running opens the payload controls,
-  rather than reporting "Already jailbroken" as an error. The saved toggle
-  chooses the manual menu or immediate Payload Manager autoload.
+- If the ELF loader is already running, open the payload controls instead of
+  reporting "Already jailbroken" as an error. The saved toggle chooses the
+  manual menu or immediate PLK Manager autoload without rerunning the kernel chain.
 - The exploit iframe remains alive; payload cards render in the outer UI.
 - Startup revision: payload card construction, card image requests and menu
   stylesheet loading begin only after ELF loader readiness. The menu reports
@@ -36,17 +36,12 @@ A successful ELF send only confirms transfer, not service startup.
 
 The installer builds with the PS5 SDK. Console installation, jailbreak
 stability, rendering, and payload compatibility still require on-device testing.
-This revision fixes false-success reporting when the kernel chain stops early,
-propagates terminal errors to the outer UI, and stops log polling on terminal
-Relapse failures. Embedded log updates use the existing batched poll instead of
-forcing hidden-document layout and posting a message for every line.
-
-WebKit retries stop after five safe attempts, or immediately when state cannot
-be safely released. Restart the console after a terminal failure; the app does
-not automatically reload an uncertain exploit document. The exploit iframe
-remains alive. Kernel race logic and firmware offsets are unchanged. These
-safeguards do not establish that console freezes or the underlying kernel
-failure are fixed; PS5 testing is still required.
+At the user's request, the recent custom retry limits, terminal-error patches,
+and batched logging changes have been removed. Upstream retry, logging and
+failure behavior are restored. This also restores upstream's known misleading
+success message on some early kernel failures; it is not evidence of readiness.
+The post-success payload menu and optional PLK Manager autoload remain.
+This rollback is not a verified fix for console freezes.
 
 ## Credits
 

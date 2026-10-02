@@ -46,6 +46,17 @@ if "window.__relapseSendPayload" not in s:
         raise SystemExit("Upstream startAutoload changed; refusing an unverified patch")
     p.write_text(s.replace(anchor, anchor + bridge, 1), encoding="utf-8")
 '''
+hook += '\ns = p.read_text(encoding="utf-8")\nold = ' + repr('''    const why = "Already jailbroken.";
+    log(why, "error");
+    if (AUTOLOAD) reportAutoload(false, { why: why });
+    return;''') + '\nnew = ' + repr('''    log("ELF loader already running; opening payload controls", "info");
+    await startAutoload(p, chain);
+    return;''') + '''
+if new not in s:
+    if s.count(old) != 1:
+        raise SystemExit("Upstream existing-loader branch changed")
+    p.write_text(s.replace(old, new, 1), encoding="utf-8")
+'''
 (root / "tools/relapse_menu_bridge.py").write_text(hook, encoding="utf-8")
 make = root / "Makefile"
 text = make.read_text(encoding="utf-8")
@@ -78,11 +89,14 @@ if 'window.__relapseChainStartedAt' not in text:
                         "        updateProgress(100, 'Jailbreak complete. ELF loader ready in ' + "
                         "((Date.now() - window.__relapseChainStartedAt) / 1000).toFixed(1) + ' seconds.');")
     js.write_text(text, encoding="utf-8")
-shutil.copyfile(source / "native/stabilize-upstream.py", root / "tools/relapse_stability.py")
+# Remove the optional stability hook from reused build trees. relapse-prepare
+# regenerates the child sources from upstream on the next build.
 text = make.read_text(encoding="utf-8")
-if 'tools/relapse_stability.py' not in text:
-    anchor = '\t$(PYTHON) tools/relapse_menu_bridge.py\n'
-    if text.count(anchor) != 1:
-        raise SystemExit("Missing Relapse menu build hook")
-    make.write_text(text.replace(anchor, anchor + '\t$(PYTHON) tools/relapse_stability.py\n'), encoding="utf-8")
-print("Relapse menu/autoload choice and stability safeguards staged")
+make.write_text(text.replace('\t$(PYTHON) tools/relapse_stability.py\n', ''), encoding="utf-8")
+text = js.read_text(encoding="utf-8")
+text = text.replace("if ((data.ok || exploitMode === 'relapse') && mirrorTimer) {",
+                    "if (data.ok && mirrorTimer) {")
+text = text.replace("      if (data.kind === 'menu-ready') {\n        if (finished) return;\n        mirrorConsole(exploitMode);\n        finished = true;",
+                    "      if (data.kind === 'menu-ready') {\n        finished = true;")
+js.write_text(text, encoding="utf-8")
+print("Relapse post-jailbreak menu staged; upstream retry and failure handling restored")

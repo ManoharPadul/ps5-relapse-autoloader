@@ -34,7 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           # Keep the complete upstream frontend and unified autoloader.
-          # Add the outer menu and fail-closed guards; preserve kernel race logic.
+          # Add the outer menu; preserve upstream retry and failure handling.
           cp assets/icon.png .native-upstream/assets/relapse-icon.png
           python3 native/embed-icon.py .native-upstream
           python3 native/brand-upstream.py .native-upstream
@@ -56,8 +56,8 @@ jobs:
           cp .native-upstream/installer.elf ps5-relapse-autoloader-installer.0.3.0.elf
           sha256sum ps5-relapse-autoloader-installer.0.3.0.elf > ps5-relapse-autoloader-installer.0.3.0.elf.sha256
 
-      - name: Verify prepared stability guards
-        run: node native/test-stability.cjs .native-upstream
+      - name: Verify payload bridge
+        run: node native/test-menu-bridge.cjs .native-upstream
 
       - name: Upload native installer artifact
         uses: actions/upload-artifact@v4
