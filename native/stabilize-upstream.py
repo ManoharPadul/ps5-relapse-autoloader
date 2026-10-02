@@ -14,6 +14,14 @@ def patch(relative, old, new):
     path.write_text(text.replace(old, new, 1), encoding='utf-8', newline='\n')
 
 base = 'frontend/autoloader/relapse/src/'
+patch(base + 'main.js',
+      '''    const why = "Already jailbroken.";
+    log(why, "error");
+    if (AUTOLOAD) reportAutoload(false, { why: why });
+    return;''',
+      '''    log("ELF loader already running; opening payload controls", "info");
+    await startAutoload(p, chain);
+    return;''')
 patch(base + 'relapse_exploit.js',
       'return { kbase: this.kbase, done: true, payloads: false };',
       'return { kbase: this.kbase, done: false, payloads: false, error: why };')

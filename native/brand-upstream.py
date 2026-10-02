@@ -25,10 +25,12 @@ def main() -> int:
         root / "Makefile",
         root / "tools" / "gen_file_registry.py",
         root / "tools" / "gen_icons.py",
+        root / "tools" / "gen_version.py",
         *sorted((root / "src").glob("*.c")),
         *sorted((root / "src").glob("*.h")),
     ]
     replacements = (
+        ('os.environ.get("BUILD_TYPE", "dev")', 'os.environ.get("BUILD_TYPE", "stable")'),
         ("WebKit Autoloader", "PS5 Relapse AutoLoader"),
         ("PS5 Relapse AutoLoader by PLK", "PS5 Relapse AutoLoader by Manohar Padul"),
         ("by PLK (built", "by Manohar Padul (built"),

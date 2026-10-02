@@ -10,6 +10,11 @@ the Relapse payload page after a successful Relapse jailbreak.
   readiness; the payload menu remains available.
 - Saved ON/OFF preference, one send at a time, and visible send errors.
 - New v0.3.0 versioned native cache bundle.
+- Visible version is `0.3.0`, without a development suffix. The cache manifest
+  still changes with the build timestamp; reinstall this ELF to update it.
+- Reopening with an ELF loader already running opens the payload controls,
+  rather than reporting "Already jailbroken" as an error. The saved toggle
+  chooses the manual menu or immediate Payload Manager autoload.
 - The exploit iframe remains alive; payload cards render in the outer UI.
 - Startup revision: payload card construction, card image requests and menu
   stylesheet loading begin only after ELF loader readiness. The menu reports

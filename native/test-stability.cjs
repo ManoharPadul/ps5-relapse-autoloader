@@ -38,3 +38,22 @@ assert.match(messages[0].why,/armings did not complete/);
 assert.ok(!site.includes('kind: "log"'));
 assert.ok(read('app.js').includes("(data.ok || exploitMode === 'relapse') && mirrorTimer"));
 console.log('PASS: bounded safe retries, unsafe-state stop, kernel failure semantics, terminal error propagation');
+
+// Exercise the actual early-return branch without loading any exploit module.
+const early = main.slice(main.indexOf('  if (await isElfldrListening'),
+  main.indexOf('  const { runKernelExploit }'));
+assert.ok(early.includes('await startAutoload(p, chain)'));
+(async () => {
+  for (const running of [true, false]) {
+    let menus = 0;
+    let kernelReached = 0;
+    const context = {p:{}, chain:{}, log(){},
+      isElfldrListening:async () => running,
+      startAutoload:async () => {menus++;},
+      kernel:() => {kernelReached++;}};
+    await vm.runInNewContext('(async () => { ' + early + '\nkernel(); })()', context);
+    assert.equal(menus, Number(running));
+    assert.equal(kernelReached, Number(!running));
+  }
+  console.log('PASS: existing loader opens payload controls and skips kernel chain');
+})().catch(error => { console.error(error); process.exitCode = 1; });
