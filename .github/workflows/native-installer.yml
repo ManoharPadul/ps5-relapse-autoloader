@@ -57,7 +57,9 @@ jobs:
           sha256sum ps5-relapse-autoloader-installer.0.3.0.elf > ps5-relapse-autoloader-installer.0.3.0.elf.sha256
 
       - name: Verify payload bridge
-        run: node native/test-menu-bridge.cjs .native-upstream
+        run: |
+          node native/test-menu-bridge.cjs .native-upstream
+          node native/test-packaged-bundle.cjs .native-upstream
 
       - name: Upload native installer artifact
         uses: actions/upload-artifact@v4

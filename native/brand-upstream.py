@@ -30,6 +30,7 @@ def main() -> int:
         *sorted((root / "src").glob("*.h")),
     ]
     replacements = (
+        ('full = base\n', 'full = base + "-cache-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%H%M%S")\n'),
         ('os.environ.get("BUILD_TYPE", "dev")', 'os.environ.get("BUILD_TYPE", "stable")'),
         ("WebKit Autoloader", "PS5 Relapse AutoLoader"),
         ("PS5 Relapse AutoLoader by PLK", "PS5 Relapse AutoLoader by Manohar Padul"),
@@ -60,6 +61,9 @@ def main() -> int:
             updated = updated.replace(old, new)
         updated = re.sub(r'(#define\s+WKAL_VERSION\s+)"[^"]+"',
                          r'\1"0.3.0"', updated)
+        # Presentation version is stable; cache directory/marker stays unique.
+        if path in (root / "frontend/autoloader/index.html", root / "frontend/installer-page/index.html"):
+            updated = updated.replace('[[VERSION_PLACEHOLDER]]', '0.3.0')
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed += 1

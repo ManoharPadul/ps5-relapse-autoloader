@@ -38,7 +38,8 @@
     var art = document.createElement('img');
     art.alt = tile.title;
     art.onerror = function () { art.style.display = 'none'; fallback.style.display = 'block'; };
-    art.src = 'ui/btn-' + tile.key + '-default.png';
+    if (tile.key === 'game-compressor') art.onerror();
+    else art.src = 'ui/btn-' + tile.key + '-default.png';
     button.appendChild(art); button.appendChild(fallback);
     button.onclick = function () { send(tile.name); };
     cards.appendChild(button);

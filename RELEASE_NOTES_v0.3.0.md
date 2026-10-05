@@ -11,7 +11,11 @@ the Relapse payload page after a successful Relapse jailbreak.
 - Saved ON/OFF preference, one send at a time, and visible send errors.
 - New v0.3.0 versioned native cache bundle.
 - Visible version is `0.3.0`, without a development suffix. The cache manifest
-  still changes with the build timestamp; reinstall this ELF to update it.
+  and internal `/app/0.3.0-cache-<build>/` path change per build to avoid reusing
+  earlier 0.3.0 content. Reinstall this ELF to update it.
+- Game Compressor replaced with the file supplied on 2026-10-05 (1,306,064
+  bytes; SHA256 `5fec05b8a3cb89bafbc97970d5d68d9f31e6fcde873b5523243890e50836592b`).
+  Firmware compatibility and copy/move/compress operations require console testing.
 - If the ELF loader is already running, open the payload controls instead of
   reporting "Already jailbroken" as an error. The saved toggle chooses the
   manual menu or immediate PLK Manager autoload without rerunning the kernel chain.

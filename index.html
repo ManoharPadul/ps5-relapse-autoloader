@@ -678,17 +678,17 @@ async function ensureOfflineCache() {
     }
 
     setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");
-    let registration = await navigator.serviceWorker.register("./sw.js?v=32", { scope: "./" });
+    let registration = await navigator.serviceWorker.register("./sw.js?v=33", { scope: "./" });
     try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
 
     let worker = null;
     for (let attempt = 0; attempt < 40; attempt++) {
         registration = await navigator.serviceWorker.ready;
         worker = registration.active;
-        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=32") !== -1) break;
+        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=33") !== -1) break;
         await sleep(250);
     }
-    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=32") === -1) {
+    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=33") === -1) {
         throw new Error("offline cache worker did not activate");
     }
 
@@ -848,7 +848,7 @@ function preparePayloadMenu() {
         { title: "PLK Manager v0.5.2 (13.60)", description: "Rebuilt with latest SDK. Open PS5-IP:8084.", name: "pldmgr_v0.5.2.elf", key: "pldmgr-v052", art: false },
         { title: "nanodns", description: "nanodns payload.", name: "nanodns.elf", key: "nanodns", art: false },
         { title: "shadowmountplus", description: "shadowmountplus payload.", name: "shadowmountplus.elf", key: "shadowmountplus", art: false },
-        { title: "Game Compressor 1.0.4 · 13.60", description: "Relapse PS5 SDK build. Opens port 5910.", name: "game-compressor.elf", key: "game-compressor", art: false }
+        { title: "Game Compressor", description: "Updated user-supplied build (2026-10-05).", name: "game-compressor.elf", key: "game-compressor", art: false }
     ];
     for (const fallback of fallbackTiles) {
         if (!tiles.some((tile) => tile.name === fallback.name)) tiles.push(fallback);
@@ -912,7 +912,7 @@ function preparePayloadMenu() {
         art.alt = t.title;
         art.width = 626;
         art.height = 104;
-        art.src = new URL("ui/btn-" + t.key + "-default.png", location.href).href;
+        if (t.key !== "game-compressor") art.src = new URL("ui/btn-" + t.key + "-default.png", location.href).href;
         art.addEventListener("load", () => {
             // Force the decoded bitmap into a painted layout box before exploit.
             void art.offsetHeight;
@@ -925,6 +925,7 @@ function preparePayloadMenu() {
             a.appendChild(info);
         };
         a.appendChild(art);
+        if (t.key === "game-compressor") art.onerror();
 
         a.addEventListener("click", async (e) => {
             e.preventDefault();
