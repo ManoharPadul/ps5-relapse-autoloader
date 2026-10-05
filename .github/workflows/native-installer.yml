@@ -59,6 +59,7 @@ jobs:
       - name: Verify payload bridge
         run: |
           node native/test-menu-bridge.cjs .native-upstream
+          node native/test-installer.cjs .native-upstream
           node native/test-packaged-bundle.cjs .native-upstream
 
       - name: Upload native installer artifact

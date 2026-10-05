@@ -3,6 +3,10 @@
 By Manohar Padul.
 
 - Internal app metadata, displayed version and installer filename updated to 0.3.1.
+- Installer no longer redirects to the jailbreak app on local-server probe
+  failure or while the asynchronous probe is pending. Cache readiness and
+  server readiness are required before app installation. Failures stay on the
+  installer page; launch the homescreen app separately to start jailbreaking.
 - Fresh versioned native cache path: `/app/0.3.1-cache-<build>/`.
 - Includes the user-supplied Game Compressor ELF from 2026-10-05.
 - After a successful jailbreak, opens the Relapse payload page or sends PLK

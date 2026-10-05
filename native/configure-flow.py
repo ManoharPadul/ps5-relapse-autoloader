@@ -3,9 +3,11 @@
 from pathlib import Path
 import shutil
 import sys
+import subprocess
 
 source = Path(__file__).resolve().parent.parent
 root = Path(sys.argv[1]).resolve()
+subprocess.run([sys.executable, str(source / 'native/configure-installer.py'), str(root)], check=True)
 app = root / "frontend/autoloader"
 for name in ("payload-ui.js", "payload-ui.css"):
     shutil.copyfile(source / "native" / name, app / name)
