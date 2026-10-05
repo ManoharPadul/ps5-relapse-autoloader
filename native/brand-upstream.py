@@ -60,10 +60,12 @@ def main() -> int:
         for old, new in replacements:
             updated = updated.replace(old, new)
         updated = re.sub(r'(#define\s+WKAL_VERSION\s+)"[^"]+"',
-                         r'\1"0.3.0"', updated)
+                         r'\1"0.3.1"', updated)
         # Presentation version is stable; cache directory/marker stays unique.
         if path in (root / "frontend/autoloader/index.html", root / "frontend/installer-page/index.html"):
-            updated = updated.replace('[[VERSION_PLACEHOLDER]]', '0.3.0')
+            updated = updated.replace('AutoLoader v0.3.0 ', 'AutoLoader v0.3.1 ')
+            updated = updated.replace('Installer v0.3.0 ', 'Installer v0.3.1 ')
+            updated = updated.replace('[[VERSION_PLACEHOLDER]]', '0.3.1')
         if updated != text:
             path.write_text(updated, encoding="utf-8")
             changed += 1

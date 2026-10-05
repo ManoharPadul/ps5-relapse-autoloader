@@ -1,6 +1,6 @@
 # Native automatic payload installer
 
-The v0.3.0 build uses **itsPLK/ps5-webkit-autoloader v0.5.2** and its installer,
+The v0.3.1 build uses **itsPLK/ps5-webkit-autoloader v0.5.2** and its installer,
 firmware routing, progress UI and cache verification. On the Relapse chain,
 Autoload Payload Manager OFF opens the Relapse payload page after success;
 ON immediately sends the bundled Payload Manager. The choice is saved on the
@@ -32,7 +32,7 @@ including its 13.60 Relapse integration, and applies this fork's visual branding
 
 The workflow uses the upstream `Dockerfile.sdk`, which installs the PS5 SDK and
 native dependencies inside the GitHub Actions runner. It produces an artifact
-named `ps5-relapse-autoloader-installer.0.3.0.elf`; it is not the pldmgr payload. Send
+named `ps5-relapse-autoloader-installer.0.3.1.elf`; it is not the pldmgr payload. Send
 that installer ELF once through the already-running elfldr, let it finish the
 one-time cache/install flow, then launch the installed homescreen app.
 

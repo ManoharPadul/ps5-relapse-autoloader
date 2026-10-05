@@ -9,7 +9,7 @@
   Supports Relapse firmware <b>7.00–13.60</b>.
 </p>
 
-Relapse AutoLoader v0.3.0 installs a cached Relapse application on the PS5. The
+Relapse AutoLoader v0.3.1 installs a cached Relapse application on the PS5. The
 native installer is an installation and cache tool; it does **not** jailbreak a
 clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` running.
 
@@ -22,9 +22,9 @@ clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` runnin
 -->
 
 For the current native ELF behavior and installation instructions, see
-[v0.3.0 release notes](RELEASE_NOTES_v0.3.0.md) and [native build documentation](native/README.md).
+[v0.3.1 release notes](RELEASE_NOTES_v0.3.1.md) and [native build documentation](native/README.md).
 The browser-hosted frontend described below is retained separately; its legacy
-timers and menu implementation are not used by the v0.3.0 native build.
+timers and menu implementation are not used by the v0.3.1 native build.
 
 ## Browser-hosted frontend
 
@@ -139,7 +139,7 @@ not available in those firmware images.
 
 ## Native offline installer
 
-The v0.3.0 native build is documented in [`native/`](native/). It uses the
+The v0.3.1 native build is documented in [`native/`](native/). It uses the
 **itsPLK/ps5-webkit-autoloader v0.5.2** installer and automatic payload interface,
 branded **PS5 Relapse AutoLoader — by Manohar Padul**, with the supplied circular
 portrait. The installer and progress UI follow upstream. After a successful
@@ -151,10 +151,10 @@ The Relapse menu is rendered in the outer UI document while its exploit iframe
 stays alive to send payloads. Other upstream exploit routes keep their unified
 autoload behavior. Configure subsequent autoloads through Payload Manager.
 
-The v0.3.0 installer is named:
+The v0.3.1 installer is named:
 
 ```text
-ps5-relapse-autoloader-installer.0.3.0.elf
+ps5-relapse-autoloader-installer.0.3.1.elf
 ```
 
 Installation flow:
@@ -166,7 +166,7 @@ Installation flow:
 4. Reboot once, then launch **PS5 Relapse AutoLoader** from the PS5 Media section.
 
 The complete release text is in
-[`RELEASE_NOTES_v0.3.0.md`](RELEASE_NOTES_v0.3.0.md). The native ELF must be tested
+[`RELEASE_NOTES_v0.3.1.md`](RELEASE_NOTES_v0.3.1.md). The native ELF must be tested
 on the target PS5 before release; a successful compiler build does not guarantee
 that every payload or firmware configuration will work.
 

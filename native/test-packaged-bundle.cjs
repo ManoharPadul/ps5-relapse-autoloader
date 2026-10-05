@@ -6,10 +6,10 @@ const root = process.argv[2];
 if (!root) throw new Error('Pass the completed upstream build directory');
 const dist = path.join(root, 'frontend/dist');
 const version = fs.readFileSync(path.join(dist, 'VERSION'), 'utf8').trim();
-assert.match(version, /^0\.3\.0-cache-\d{14}$/);
+assert.match(version, /^0\.3\.1-cache-\d{14}$/);
 const app = path.join(dist, 'app', version);
 const html = fs.readFileSync(path.join(app, 'index.html'), 'utf8');
-assert.ok(html.includes('AutoLoader v0.3.0 by Manohar Padul'));
+assert.ok(html.includes('AutoLoader v0.3.1 by Manohar Padul'));
 assert.ok(!html.includes('[[VERSION_PLACEHOLDER]]'));
 const main = fs.readFileSync(path.join(app, 'relapse/src/main.js'), 'utf8');
 assert.ok(main.includes('ELF loader already running; opening payload controls'));
@@ -17,4 +17,4 @@ assert.ok(!main.includes('const why = "Already jailbroken."'));
 const hash = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 assert.equal(hash(path.join(app,'payloads/game-compressor.elf')),
   hash(path.join(__dirname,'../payloads/game-compressor.elf')));
-console.log('PASS: unique cache identity, visible 0.3.0, packaged reopen branch and Game Compressor hash');
+console.log('PASS: unique cache identity, visible 0.3.1, packaged reopen branch and Game Compressor hash');
