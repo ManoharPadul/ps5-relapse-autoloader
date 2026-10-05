@@ -13,6 +13,31 @@ Relapse AutoLoader v0.3.1 installs a cached Relapse application on the PS5. The
 native installer is an installation and cache tool; it does **not** jailbreak a
 clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` running.
 
+## v0.3.1 stability update
+
+**v0.3.1 is the recommended and most stable PS5 Relapse AutoLoader release so far.**
+It adds safeguards specifically aimed at preventing the known failure paths that could
+leave the application or console frozen, stuck, or continuing from an unsafe state.
+
+Key stability protections include:
+
+- A maximum of **three safe WebKit attempts per launch**.
+- Immediate stop when WebKit reports an unsafe state.
+- Correct handling of kernel-stage failures instead of reporting false success.
+- Verified AIO cleanup before privilege escalation.
+- Bounded ELF-loader readiness checks before payload controls are opened.
+- Immediate stop if the loader-check socket cannot be created.
+- Existing-loader detection so an already-ready console skips the kernel exploit.
+- Payload-send error recovery so menu controls are not left disabled.
+- Prevention of overlapping payload sends.
+- No unnecessary fixed five-second delay before jailbreak or PLK Manager autoload.
+
+These changes make **0.3.1 substantially more stable than earlier builds** and are
+designed to avoid the freeze/stuck conditions that were identified during development.
+Because PS5 kernel exploitation and third-party payload execution are timing- and
+firmware-dependent, no release can honestly guarantee that a console can never freeze.
+If an unsafe-state or kernel-stage failure is reported, restart the PS5 before trying again.
+
 <!-- Add console screenshots here later.
 <p align="center">
   <img src="./.github/screenshots/relapse-jailbreak.jpg" width="260" alt="Relapse jailbreak screen" />
@@ -142,7 +167,9 @@ not available in those firmware images.
 The v0.3.1 native build is documented in [`native/`](native/). It uses the
 **itsPLK/ps5-webkit-autoloader v0.5.2** installer and automatic payload interface,
 branded **PS5 Relapse AutoLoader — by Manohar Padul**, with the supplied circular
-portrait. The installer and progress UI follow upstream. After a successful
+portrait. **v0.3.1 is the recommended stable build** and includes additional
+failure-handling safeguards intended to prevent the known freeze/stuck paths from
+earlier builds. The installer and progress UI follow upstream. After a successful
 Relapse jailbreak, **Autoload Payload Manager OFF** shows the Relapse payload
 menu; **ON** immediately loads the bundled Payload Manager. The choice persists
 across launches. There is no added startup or autoload delay in this ELF.
