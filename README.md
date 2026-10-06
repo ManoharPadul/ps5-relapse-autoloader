@@ -15,41 +15,23 @@ clean PS5 by itself. The PS5 must already be jailbroken and have `elfldr` runnin
 
 ## v0.3.1 stability update
 
-**v0.3.1 is the recommended and most stable PS5 Relapse AutoLoader release so far.**
-It adds safeguards specifically aimed at preventing the known failure paths that could
-leave the application or console frozen, stuck, or continuing from an unsafe state.
+v0.3.1 adds safeguards for identified failure paths and improves installer, cache, and payload-menu handling.
 
-Key stability protections include:
+- Safe WebKit retries continue without a numerical cap; unsafe states stop immediately.
+- Kernel-stage failures no longer report false success.
+- AIO cleanup is checked before privilege escalation.
+- Added kernel read/write checks and cleanup safeguards.
+- ELF-loader readiness checks are bounded; socket-creation failures stop the run.
+- An existing ELF loader skips the kernel exploit after initial WebKit/worker setup.
+- Payload-send failures restore menu controls; overlapping sends are prevented.
+- Installation waits for cache completion and stops on cache errors.
+- Separate app identity allows coexistence with itsPLK AutoLoader.
+- Game Compressor uses PNG artwork matching the other payload cards.
+- No fixed five-second startup or autoload delay.
 
-- A maximum of **three safe WebKit attempts per launch**.
-- Immediate stop when WebKit reports an unsafe state.
-- Correct handling of kernel-stage failures instead of reporting false success.
-- Verified AIO cleanup before privilege escalation.
-- Bounded ELF-loader readiness checks before payload controls are opened.
-- Immediate stop if the loader-check socket cannot be created.
-- Existing-loader detection so an already-ready console skips the kernel exploit.
-- Payload-send error recovery so menu controls are not left disabled.
-- Prevention of overlapping payload sends.
-- No unnecessary fixed five-second delay before jailbreak or PLK Manager autoload.
+**Build and automated checks passed, but crash-free operation is not guaranteed.** These safeguards address identified risks; kernel exploitation and third-party payloads can still freeze the console. Restart the PS5 after an unsafe-state or kernel-stage failure.
 
-These changes make **0.3.1 substantially more stable than earlier builds** and are
-designed to avoid the freeze/stuck conditions that were identified during development.
-Because PS5 kernel exploitation and third-party payload execution are timing- and
-firmware-dependent, no release can honestly guarantee that a console can never freeze.
-If an unsafe-state or kernel-stage failure is reported, restart the PS5 before trying again.
-
-<!-- Add console screenshots here later.
-<p align="center">
-  <img src="./.github/screenshots/relapse-jailbreak.jpg" width="260" alt="Relapse jailbreak screen" />
-  <img src="./.github/screenshots/relapse-payloads.jpg" width="260" alt="Relapse payload menu" />
-  <img src="./.github/screenshots/relapse-pldmgr.jpg" width="260" alt="Relapse Payload Manager" />
-</p>
--->
-
-For the current native ELF behavior and installation instructions, see
-[v0.3.1 release notes](RELEASE_NOTES_v0.3.1.md) and [native build documentation](native/README.md).
-The browser-hosted frontend described below is retained separately; its legacy
-timers and menu implementation are not used by the v0.3.1 native build.
+The browser-hosted frontend is maintained separately from the native ELF build.
 
 ## Browser-hosted frontend
 
