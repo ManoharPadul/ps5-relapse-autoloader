@@ -6,9 +6,9 @@ By **Manohar Padul**
 - Adapted Wobkot's payload handoff to the bundled kernel shellcode, ELF loader, firmware symbol tables, and payload menu.
 - Kept the previous Relapse route available with `?chain=relapse` in the browser and `?force=relapse` in the native app.
 - Removed the fixed five-second wait before browser exploitation and updated the offline cache to v34.
-- Built the native installer as `ps5-relapse-autoloader-installer.0.3.2.elf`.
+- The native build workflow outputs `ps5-relapse-autoloader-installer.0.3.2.elf`.
 
-The known startup reduction is five seconds. PS5 runtime benchmarks and device validation have not been completed, so exploit duration and reliability may vary by firmware and console.
+The known startup reduction is five seconds. PS5 runtime benchmarks and device validation have not been completed, so exploit duration and reliability may vary by firmware and console. Attach the built ELF before publishing the release.
 
 The Y2JB repositories cover YouTube-based userland execution and setup after kernel access. They do not replace the initial WebKit jailbreak chain used by this project.
 
