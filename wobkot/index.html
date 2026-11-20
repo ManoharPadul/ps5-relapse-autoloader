@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #console {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 20px;
+        font-size: 12px;
+        overflow: auto;
+        box-sizing: border-box;
+        font-family: 'Lucida Console', 'Courier New', 'Menlo';
+        background-color: #131416;
+        color: #c1c2c5;
+      }
+    </style>
+    <script src="../payloads.js"></script>
+    <script>
+      (async function () {
+        if (document.readyState === 'loading') {
+          await new Promise(function (resolve) {
+            document.addEventListener('DOMContentLoaded', resolve, { once: true });
+          });
+        }
+        var nativeApp = location.hostname === '127.0.0.1' && location.port === '18181';
+        if (!nativeApp && 'serviceWorker' in navigator && 'MessageChannel' in window) {
+          var registration = await navigator.serviceWorker.register('../sw.js?v=34', { scope: '../' });
+          try { await registration.update(); } catch (e) {}
+          var worker = null;
+          for (var attempt = 0; attempt < 40; attempt++) {
+            registration = await navigator.serviceWorker.ready;
+            worker = registration.active;
+            if (worker && worker.state === 'activated' && worker.scriptURL.indexOf('sw.js?v=34') !== -1) break;
+            await new Promise(function (resolve) { setTimeout(resolve, 250); });
+          }
+          if (!worker || worker.state !== 'activated' || worker.scriptURL.indexOf('sw.js?v=34') === -1) {
+            throw new Error('offline cache worker did not activate');
+          }
+          await new Promise(function (resolve, reject) {
+            var channel = new MessageChannel();
+            channel.port1.onmessage = function (event) {
+              var data = event.data || {};
+              if (data.type === 'offline-progress') {
+                document.getElementById('console').textContent =
+                  'Preparing offline bundle ' + data.done + '/' + data.total + '...';
+              }
+              if (data.type === 'offline-ready') resolve();
+              if (data.type === 'offline-error') reject(new Error(data.error));
+            };
+            channel.port1.start();
+            worker.postMessage({ type: 'prepare-offline' }, [channel.port2]);
+          });
+        }
+        if (nativeApp) document.getElementById('console').textContent = 'Starting Wobkot...';
+        else document.getElementById('console').textContent = 'Offline bundle ready. Starting Wobkot...';
+        var script = document.createElement('script');
+        script.src = 'src/main.js';
+        document.head.appendChild(script);
+      })().catch(function (error) {
+        document.getElementById('console').textContent = 'Unable to prepare Wobkot: ' + error.message;
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'wkal', kind: 'log', message: '[-] ' + error.message }, '*');
+        }
+      });
+    </script>
+    <title>Wobkot</title>
+  </head>
+  <body>
+    <pre id="console"></pre>
+  </body>
+</html>

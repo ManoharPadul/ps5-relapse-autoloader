@@ -55,7 +55,15 @@ replace('''      function maybeInstall() {
         completed = true;
         installApp();
       }''')
-replace("The PS5 Relapse AutoLoader shortcut is now on your PS5 homescreen. You can close this page.",
-        "Cache complete and app installed. Close this page. Open PS5 Relapse AutoLoader from the homescreen when you want to jailbreak.")
+installer_status = "Cache complete and app installed. Close this page. Open PS5 Relapse AutoLoader from the homescreen when you want to jailbreak."
+if installer_status not in text:
+    old_statuses = (
+        "The PS5 Relapse AutoLoader shortcut is now on your PS5 homescreen. You can close this page.",
+        "The WebKit Autoloader shortcut is now on your PS5 homescreen. You can close this page.",
+    )
+    matches = [status for status in old_statuses if status in text]
+    if len(matches) != 1:
+        raise SystemExit("Installer completion message changed; refusing an unverified branding patch")
+    text = text.replace(matches[0], installer_status, 1)
 page.write_text(text, encoding='utf-8', newline='\n')
 print('Installer is cache/install only; probe failures never launch the app')

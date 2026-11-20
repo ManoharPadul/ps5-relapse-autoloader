@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+  if (new URLSearchParams(location.search).get("chain") !== "relapse") {
+      location.replace("./wobkot/index.html" + location.search);
+  }
+</script>
 <title>PS5 Relapse AutoLoader</title>
 <style>
   :root {
@@ -678,17 +683,17 @@ async function ensureOfflineCache() {
     }
 
     setBootStatus("Preparing offline cache before jailbreak...", "LOG-INFO");
-    let registration = await navigator.serviceWorker.register("./sw.js?v=33", { scope: "./" });
+    let registration = await navigator.serviceWorker.register("./sw.js?v=34", { scope: "./" });
     try { await registration.update(); } catch (e) { /* current worker may already be newest */ }
 
     let worker = null;
     for (let attempt = 0; attempt < 40; attempt++) {
         registration = await navigator.serviceWorker.ready;
         worker = registration.active;
-        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=33") !== -1) break;
+        if (worker && worker.state === "activated" && worker.scriptURL.indexOf("sw.js?v=34") !== -1) break;
         await sleep(250);
     }
-    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=33") === -1) {
+    if (!worker || worker.state !== "activated" || worker.scriptURL.indexOf("sw.js?v=34") === -1) {
         throw new Error("offline cache worker did not activate");
     }
 
@@ -783,14 +788,9 @@ async function establishUserlandPrimitive() {
 }
 
 async function waitForJailbreakStartup() {
-    // Allow initial document resources to finish before starting the countdown.
-    // This is a startup grace period, not a guarantee of exploit stability.
+    // Let initial document resources finish without an extra fixed delay.
     if (document.readyState !== "complete") {
         await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
-    }
-    for (let seconds = 5; seconds > 0; seconds--) {
-        setBootStatus("Cache preparation finished. Jailbreak starts in " + seconds + " seconds...", "LOG-INFO");
-        await sleep(1000);
     }
     setBootStatus("Starting jailbreak...", "LOG-INFO");
 }

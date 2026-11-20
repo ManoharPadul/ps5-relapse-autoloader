@@ -1,5 +1,5 @@
-const CACHE_NAME = "ps5-offline-v33";
-const OFFLINE_MARKER = "./__offline_ready_v33";
+const CACHE_NAME = "ps5-offline-v34";
+const OFFLINE_MARKER = "./__offline_ready_v34";
 
 const STATIC_ASSETS = [
   "./",
@@ -16,6 +16,18 @@ const STATIC_ASSETS = [
   "./rop.js",
   "./rop_slave.js",
   "./syscalls.js",
+  "./wobkot/index.html",
+  "./wobkot/payload-ui.js",
+  "./wobkot/payload-ui.css",
+  "./wobkot/LICENSE.txt",
+  "./wobkot/src/main.js",
+  "./wobkot/src/misc.js",
+  "./wobkot/src/userland.js",
+  "./wobkot/src/kernel.js",
+  "./wobkot/src/thread.js",
+  "./wobkot/src/worker.js",
+  "./wobkot/src/ps5/impl.js",
+  "./wobkot/src/ps5/relapse.js",
   "./offsets/7.00.js",
   "./offsets/7.01.js",
   "./offsets/7.20.js",
