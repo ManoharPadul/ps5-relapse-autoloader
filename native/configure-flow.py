@@ -112,6 +112,27 @@ if 'lines.append(wobkot_iframe_url(app_dir))' not in text:
     text = text.replace(anchor, anchor + '\n    lines.append(wobkot_iframe_url(app_dir))', 1)
 registry.write_text(text, encoding="utf-8")
 
+# The upstream exploit patches were created from LF sources, while checked-out
+# exploit files may use CRLF. Ask git-apply to ignore line-ending whitespace so
+# all three pinned patches work on Windows and Linux build hosts.
+for exploit in ("relapse", "slopkit", "umtx2"):
+    patch_script = root / f"tools/apply_{exploit}_patch.sh"
+    text = patch_script.read_text(encoding="utf-8")
+    old_apply = 'if git apply --check "$PATCH" 2>/dev/null; then\n    git apply "$PATCH"'
+    new_apply = ('if git apply --ignore-whitespace --check "$PATCH" 2>/dev/null; then\n'
+                 '    git apply --ignore-whitespace "$PATCH"')
+    if new_apply not in text:
+        if text.count(old_apply) != 1:
+            raise SystemExit(f"Upstream {exploit} patch handler changed; refusing the line-ending compatibility patch")
+        text = text.replace(old_apply, new_apply, 1)
+    old_reverse = 'elif git apply --reverse --check "$PATCH" 2>/dev/null; then'
+    new_reverse = 'elif git apply --ignore-whitespace --reverse --check "$PATCH" 2>/dev/null; then'
+    if new_reverse not in text:
+        if text.count(old_reverse) != 1:
+            raise SystemExit(f"Upstream {exploit} reverse-patch handler changed; refusing the line-ending compatibility patch")
+        text = text.replace(old_reverse, new_reverse, 1)
+    patch_script.write_text(text, encoding="utf-8")
+
 # Keep all kernel/exploit code upstream. Add only a post-success payload sender
 # bridge, in the generated frontend copy after upstream applies its own patch.
 hook = '''from pathlib import Path
